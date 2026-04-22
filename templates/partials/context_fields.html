@@ -1,0 +1,102 @@
+{% set current = context if context is defined else none %}
+<div class="form-grid">
+    <label>
+        Nombre del contexto
+        <input type="text" name="name" value="{{ current.name if current else '' }}" placeholder="Ej. Familia urbana" required>
+    </label>
+    <label>
+        Número de personas
+        <input type="number" name="number_people" min="1" value="{{ current.number_people if current else 1 }}" required>
+    </label>
+</div>
+
+<div class="field-group">
+    <h3>Composición del hogar</h3>
+    <div class="form-grid">
+        <label>
+            Menores
+            <input type="number" name="children" min="0" value="{{ current.children if current else 0 }}">
+        </label>
+        <label>
+            Adultos
+            <input type="number" name="adults" min="0" value="{{ current.adults if current else 1 }}">
+        </label>
+        <label>
+            Adultos mayores
+            <input type="number" name="elderly" min="0" value="{{ current.elderly if current else 0 }}">
+        </label>
+        <label>
+            Género
+            <input type="text" name="gender" value="{{ current.gender if current and current.gender else '' }}" placeholder="Opcional">
+        </label>
+        <label>
+            Dependientes
+            <input type="number" name="dependents_count" min="0" value="{{ current.dependents_count if current else 0 }}">
+        </label>
+    </div>
+</div>
+
+<div class="field-group">
+    <h3>Ingreso</h3>
+    <div class="form-grid">
+        <label>
+            Ingreso mensual
+            <input type="number" name="monthly_income" min="0" step="0.01" value="{{ current.monthly_income if current else 0 }}">
+        </label>
+        <label>
+            Personas con ingreso
+            <input type="number" name="earners" min="1" value="{{ current.earners if current else 1 }}">
+        </label>
+        <label>
+            Tipo de ingreso
+            <select name="income_type">
+                {% set income_type = current.income_type if current else "fijo" %}
+                <option value="fijo" {% if income_type == "fijo" %}selected{% endif %}>Fijo</option>
+                <option value="variable" {% if income_type == "variable" %}selected{% endif %}>Variable</option>
+            </select>
+        </label>
+    </div>
+</div>
+
+<div class="field-group">
+    <h3>Patrón de consumo</h3>
+    <div class="form-grid">
+        <label>
+            Nivel de consumo
+            <select name="consumption_level">
+                {% set consumption_level = current.consumption_level if current else "medio" %}
+                <option value="bajo" {% if consumption_level == "bajo" %}selected{% endif %}>Bajo</option>
+                <option value="medio" {% if consumption_level == "medio" %}selected{% endif %}>Medio</option>
+                <option value="alto" {% if consumption_level == "alto" %}selected{% endif %}>Alto</option>
+            </select>
+        </label>
+        <label>
+            Preferencia
+            <select name="preferences">
+                {% set preferences = current.preferences if current else "economico" %}
+                <option value="economico" {% if preferences == "economico" %}selected{% endif %}>Económica</option>
+                <option value="premium" {% if preferences == "premium" %}selected{% endif %}>Premium</option>
+            </select>
+        </label>
+        <label>
+            Dieta
+            <input type="text" name="diet" value="{{ current.diet if current and current.diet else '' }}" placeholder="Opcional">
+        </label>
+    </div>
+</div>
+
+<div class="field-group">
+    <h3>Frecuencia de compra</h3>
+    <div class="form-grid">
+        <label>
+            Frecuencia
+            <select name="purchase_frequency">
+                {% set frequency = current.purchase_frequency if current else "semanal" %}
+                <option value="diaria" {% if frequency == "diaria" %}selected{% endif %}>Diaria</option>
+                <option value="semanal" {% if frequency == "semanal" %}selected{% endif %}>Semanal</option>
+                <option value="quincenal" {% if frequency == "quincenal" %}selected{% endif %}>Quincenal</option>
+                <option value="mensual" {% if frequency == "mensual" %}selected{% endif %}>Mensual</option>
+            </select>
+        </label>
+    </div>
+</div>

@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block title %}Editar producto | Canasta Básica Mexicana{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <div>
+        <p class="eyebrow">Edición de producto</p>
+        <h1>Editar {{ product.name }}</h1>
+        <p class="muted">Actualiza la cantidad de referencia y los precios por tienda.</p>
+    </div>
+    <a class="button secondary" href="{{ url_for('products.products') }}">Volver a productos</a>
+</section>
+
+<article class="card form-card narrow">
+    <form method="post" class="stack-form">
+        <div class="form-grid">
+            <label>
+                Nombre del producto
+                <input type="text" name="name" value="{{ product.name }}" required>
+            </label>
+            <label>
+                Categoría
+                <select name="category" required>
+                    <option value="" {% if product.category not in categories %}selected{% endif %} disabled>Selecciona una categoría</option>
+                    {% for category in categories %}
+                        <option value="{{ category }}" {% if product.category == category %}selected{% endif %}>{{ category }}</option>
+                    {% endfor %}
+                </select>
+            </label>
+            <label>
+                Cantidad
+                <input type="number" name="quantity_value" min="0.01" step="0.01" value="{{ product.quantity_value }}" required>
+            </label>
+            <label>
+                Unidad
+                <select name="quantity_unit">
+                    {% for unit, label in [("g", "Gramos"), ("kg", "Kilogramos"), ("ml", "Mililitros"), ("l", "Litros"), ("pza", "Pieza")] %}
+                        <option value="{{ unit }}" {% if product.quantity_unit == unit %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </label>
+        </div>
+
+        <div class="dynamic-section">
+            <div class="section-title">
+                <h3>Precios por tienda</h3>
+                <p>Actualiza los precios de las tres tiendas disponibles.</p>
+            </div>
+            <div class="fixed-price-grid">
+                {% for field in store_fields %}
+                    <div class="store-price-row">
+                        <div class="store-name">
+                            <span class="store-badge">{{ field.store }}</span>
+                        </div>
+                        <label>
+                            Precio
+                            <input type="number" name="{{ field.field_name }}" min="0.01" step="0.01" value="{{ field.value }}" required>
+                        </label>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <button class="button primary" type="submit">Guardar cambios</button>
+            <a class="button secondary" href="{{ url_for('products.products') }}">Cancelar</a>
+        </div>
+    </form>
+</article>
+{% endblock %}

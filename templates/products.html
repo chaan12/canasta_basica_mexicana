@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+
+{% block title %}Productos | Canasta Básica Mexicana{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <div>
+        <p class="eyebrow">Gestión de productos</p>
+        <h1>Productos y precios</h1>
+        <p class="muted">Registra productos de la canasta y múltiples precios por tienda.</p>
+    </div>
+</section>
+
+<section class="two-column">
+    <article class="card form-card">
+        <div class="section-title">
+            <h2>Agregar producto</h2>
+            <p>Incluye la cantidad de referencia y sus precios por tienda.</p>
+        </div>
+        <form method="post" class="stack-form">
+            <div class="form-grid">
+                <label>
+                    Nombre del producto
+                    <input type="text" name="name" placeholder="Ej. Leche" required>
+                </label>
+                <label>
+                    Categoría
+                    <select name="category" required>
+                        <option value="" selected disabled>Selecciona una categoría</option>
+                        {% for category in categories %}
+                            <option value="{{ category }}">{{ category }}</option>
+                        {% endfor %}
+                    </select>
+                </label>
+                <label>
+                    Cantidad
+                    <input type="number" name="quantity_value" min="0.01" step="0.01" value="1" required>
+                </label>
+                <label>
+                    Unidad
+                    <select name="quantity_unit">
+                        <option value="g">Gramos</option>
+                        <option value="kg" selected>Kilogramos</option>
+                        <option value="ml">Mililitros</option>
+                        <option value="l">Litros</option>
+                        <option value="pza">Pieza</option>
+                    </select>
+                </label>
+            </div>
+
+            <div class="dynamic-section">
+                <div class="section-title">
+                    <h3>Precios por tienda</h3>
+                    <p>Captura el precio del mismo producto en las tres cadenas fijas.</p>
+                </div>
+                <div class="fixed-price-grid">
+                    {% for field in store_fields %}
+                        <div class="store-price-row">
+                            <div class="store-name">
+                                <span class="store-badge">{{ field.store }}</span>
+                            </div>
+                            <label>
+                                Precio
+                                <input type="number" name="{{ field.field_name }}" min="0.01" step="0.01" placeholder="0.00" required>
+                            </label>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <button class="button primary" type="submit">Guardar producto</button>
+        </form>
+    </article>
+
+    <article class="card content-card">
+        <div class="section-title">
+            <h2>Productos registrados</h2>
+            <p>{{ products|length }} productos disponibles.</p>
+        </div>
+        {% if products %}
+            <div class="product-list">
+                {% for product in products %}
+                    <div class="list-item">
+                        <div>
+                            <h3>{{ product.name }}</h3>
+                            <p>{{ product.category or "Sin categoría" }} · {{ product.display_quantity }} · Normalizado: {{ product.normalized_label }}</p>
+                            <div class="tag-row">
+                                {% for price in product.prices %}
+                                    <span class="tag">{{ price.store_name }}: ${{ "%.2f"|format(price.price) }}</span>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <div class="row-actions">
+                            <a class="button secondary" href="{{ url_for('products.edit_product', product_id=product.id) }}">Editar</a>
+                            <form method="post" action="{{ url_for('products.delete_product', product_id=product.id) }}" onsubmit="return confirm('¿Eliminar este producto?');">
+                                <button class="button danger" type="submit">Eliminar</button>
+                            </form>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-state compact">
+                <h2>Sin productos</h2>
+                <p>Agrega el primer producto para iniciar el análisis.</p>
+            </div>
+        {% endif %}
+    </article>
+</section>
+{% endblock %}

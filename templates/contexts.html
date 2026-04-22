@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block title %}Contextos | Canasta Básica Mexicana{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <div>
+        <p class="eyebrow">Contextos socioeconómicos</p>
+        <h1>Contextos de consumo</h1>
+        <p class="muted">Define hogares para ajustar el costo por composición, ingreso y hábitos de compra.</p>
+    </div>
+</section>
+
+<section class="two-column">
+    <article class="card form-card">
+        <div class="section-title">
+            <h2>Agregar contexto</h2>
+            <p>Los datos se usan para calcular consumo ajustado y presión sobre ingreso.</p>
+        </div>
+        <form method="post" class="stack-form">
+            {% include "partials/context_fields.html" %}
+            <button class="button primary" type="submit">Guardar contexto</button>
+        </form>
+    </article>
+
+    <article class="card content-card">
+        <div class="section-title">
+            <h2>Contextos registrados</h2>
+            <p>{{ contexts|length }} perfiles disponibles.</p>
+        </div>
+        {% if contexts %}
+            <div class="product-list">
+                {% for context in contexts %}
+                    <div class="list-item">
+                        <div>
+                            <h3>{{ context.name }}</h3>
+                            <p>{{ context.number_people }} personas · Ingreso mensual: ${{ "%.2f"|format(context.monthly_income) }} · Consumo {{ context.consumption_level }}</p>
+                            <div class="tag-row">
+                                <span class="tag">{{ context.children }} menores</span>
+                                <span class="tag">{{ context.adults }} adultos</span>
+                                <span class="tag">{{ context.elderly }} mayores</span>
+                                <span class="tag">{{ context.purchase_frequency }}</span>
+                            </div>
+                        </div>
+                        <div class="row-actions">
+                            <a class="button secondary" href="{{ url_for('contexts.edit_context', context_id=context.id) }}">Editar</a>
+                            <form method="post" action="{{ url_for('contexts.delete_context', context_id=context.id) }}" onsubmit="return confirm('¿Eliminar este contexto?');">
+                                <button class="button danger" type="submit">Eliminar</button>
+                            </form>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-state compact">
+                <h2>Sin contextos</h2>
+                <p>Agrega el primer contexto para estimar costos familiares.</p>
+            </div>
+        {% endif %}
+    </article>
+</section>
+{% endblock %}

@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block title %}Editar contexto | Canasta Básica Mexicana{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <div>
+        <p class="eyebrow">Edición de contexto</p>
+        <h1>Editar {{ context.name }}</h1>
+        <p class="muted">Ajusta composición del hogar, ingreso y hábitos de consumo.</p>
+    </div>
+    <a class="button secondary" href="{{ url_for('contexts.contexts') }}">Volver a contextos</a>
+</section>
+
+<article class="card form-card narrow">
+    <form method="post" class="stack-form">
+        {% include "partials/context_fields.html" %}
+        <div class="form-actions">
+            <button class="button primary" type="submit">Guardar cambios</button>
+            <a class="button secondary" href="{{ url_for('contexts.contexts') }}">Cancelar</a>
+        </div>
+    </form>
+</article>
+{% endblock %}
