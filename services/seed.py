@@ -1,4 +1,7 @@
+from sqlalchemy import inspect, text
+
 from models import Context, Product, StorePrice, db
+from services.catalog_importer import load_basket_catalog
 
 
 LEGACY_CATEGORY_MAP = {
@@ -14,80 +17,73 @@ LEGACY_STORE_MAP = {
 }
 
 
-def seed_database():
-    """Agrega datos iniciales para que el tablero tenga información al arrancar."""
-    if Product.query.first() or Context.query.first():
+def ensure_database_schema():
+    inspector = inspect(db.engine)
+    if not inspector.has_table("products"):
         return
 
-    products = [
-        {
-            "name": "Leche",
-            "category": "Lácteos",
-            "quantity_value": 1,
-            "quantity_unit": "l",
-            "prices": {"Walmart": 28, "Bodega Aurrera": 30, "Chedraui": 25},
-        },
-        {
-            "name": "Tortilla de maíz",
-            "category": "Cereales y derivados",
-            "quantity_value": 1,
-            "quantity_unit": "kg",
-            "prices": {"Walmart": 24, "Bodega Aurrera": 23, "Chedraui": 22},
-        },
-        {
-            "name": "Huevo",
-            "category": "Proteínas animales",
-            "quantity_value": 1,
-            "quantity_unit": "kg",
-            "prices": {"Walmart": 48, "Bodega Aurrera": 52, "Chedraui": 46},
-        },
-        {
-            "name": "Frijol",
-            "category": "Leguminosas",
-            "quantity_value": 1,
-            "quantity_unit": "kg",
-            "prices": {"Walmart": 42, "Bodega Aurrera": 39, "Chedraui": 38},
-        },
-        {
-            "name": "Arroz",
-            "category": "Cereales y derivados",
-            "quantity_value": 1,
-            "quantity_unit": "kg",
-            "prices": {"Walmart": 31, "Bodega Aurrera": 29, "Chedraui": 30},
-        },
-        {
-            "name": "Pollo",
-            "category": "Proteínas animales",
-            "quantity_value": 1,
-            "quantity_unit": "kg",
-            "prices": {"Walmart": 98, "Bodega Aurrera": 95, "Chedraui": 90},
-        },
-        {
-            "name": "Jitomate",
-            "category": "Frutas y verduras",
-            "quantity_value": 1,
-            "quantity_unit": "kg",
-            "prices": {"Walmart": 34, "Bodega Aurrera": 36, "Chedraui": 28},
-        },
-        {
-            "name": "Aceite vegetal",
-            "category": "Abarrotes",
-            "quantity_value": 1,
-            "quantity_unit": "l",
-            "prices": {"Walmart": 48, "Bodega Aurrera": 51, "Chedraui": 49},
-        },
-    ]
+    existing_columns = {column["name"] for column in inspector.get_columns("products")}
+    migrations = {
+        "presentation": "ALTER TABLE products ADD COLUMN presentation VARCHAR(160)",
+        "source_key": "ALTER TABLE products ADD COLUMN source_key VARCHAR(160)",
+        "is_basic_basket": "ALTER TABLE products ADD COLUMN is_basic_basket BOOLEAN NOT NULL DEFAULT 0",
+    }
+
+    with db.engine.begin() as connection:
+        for column_name, statement in migrations.items():
+            if column_name not in existing_columns:
+                connection.execute(text(statement))
+
+
+def seed_database():
+    sync_basic_basket_catalog()
+    seed_default_contexts()
+
+
+def sync_basic_basket_catalog():
+    catalog = load_basket_catalog()
+    products = catalog.get("products", [])
+    if not products:
+        return
 
     for item in products:
-        product = Product(
-            name=item["name"],
-            category=item["category"],
-            quantity_value=item["quantity_value"],
-            quantity_unit=item["quantity_unit"],
-        )
-        for store, price in item["prices"].items():
-            product.prices.append(StorePrice(store_name=store, price=price))
-        db.session.add(product)
+        source_key = item["source_key"]
+        product = Product.query.filter_by(source_key=source_key).first()
+        if product is None:
+            product = Product(
+                source_key=source_key,
+                name=item["name"],
+                is_basic_basket=True,
+            )
+            db.session.add(product)
+
+        product.name = item["name"]
+        product.category = item.get("category")
+        product.presentation = item.get("presentation")
+        product.quantity_value = item.get("quantity_value") or 1
+        product.quantity_unit = item.get("quantity_unit") or "pza"
+        product.source_key = source_key
+        product.is_basic_basket = True
+
+        valid_stores = set(item.get("prices", {}).keys())
+        existing_prices = {price.store_name: price for price in product.prices}
+        for store_name, price in item.get("prices", {}).items():
+            store_price = existing_prices.get(store_name)
+            if store_price is None:
+                product.prices.append(StorePrice(store_name=store_name, price=price))
+            else:
+                store_price.price = price
+
+        for store_price in list(product.prices):
+            if store_price.store_name not in valid_stores:
+                db.session.delete(store_price)
+
+    db.session.commit()
+
+
+def seed_default_contexts():
+    if Context.query.first():
+        return
 
     contexts = [
         Context(
@@ -145,7 +141,7 @@ def seed_database():
 
 
 def normalize_catalogs():
-    """Alinea datos heredados con los catálogos fijos actuales."""
+    """Align old manually entered data with the current catalogs."""
     has_changes = False
 
     for product in Product.query.all():

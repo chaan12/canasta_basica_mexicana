@@ -15,7 +15,7 @@ def _to_float(value, default=0):
 
 
 def _clean_prices(form):
-    """Lee los precios fijos por tienda y valida que sean positivos."""
+    """Read fixed store prices and validate positive values."""
     cleaned = {}
     missing_stores = []
     for field in STORE_FIELDS:
@@ -61,6 +61,9 @@ def products():
         if category not in PRODUCT_CATEGORIES:
             flash("Selecciona una categoría válida.", "error")
             return redirect(url_for("products.products"))
+        if product.quantity_value <= 0:
+            flash("Captura una cantidad válida mayor a cero.", "error")
+            return redirect(url_for("products.products"))
         if missing_stores:
             flash(f"Captura un precio válido para: {', '.join(missing_stores)}.", "error")
             return redirect(url_for("products.products"))
@@ -100,6 +103,9 @@ def edit_product(product_id):
             return redirect(url_for("products.edit_product", product_id=product.id))
         if category not in PRODUCT_CATEGORIES:
             flash("Selecciona una categoría válida.", "error")
+            return redirect(url_for("products.edit_product", product_id=product.id))
+        if product.quantity_value <= 0:
+            flash("Captura una cantidad válida mayor a cero.", "error")
             return redirect(url_for("products.edit_product", product_id=product.id))
         if missing_stores:
             flash(f"Captura un precio válido para: {', '.join(missing_stores)}.", "error")

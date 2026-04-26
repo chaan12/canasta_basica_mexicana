@@ -1,169 +1,206 @@
 {% extends "base.html" %}
 
-{% block title %}Tablero | Canasta Básica Mexicana{% endblock %}
+{% block title %}Dashboard | Canasta Básica Mexicana{% endblock %}
 
 {% block content %}
 <section class="page-header dashboard-header">
     <div class="dashboard-hero-copy">
-        <p class="eyebrow">Vista general</p>
-        <h1>Tablero general de la canasta</h1>
-        <p class="muted">Resumen promedio entre contextos, con una lectura más visual y comparativa de precios, ingreso y presión de gasto.</p>
+        <p class="eyebrow">Análisis por contextos</p>
+        <h1>Dashboard de canasta básica y hogares</h1>
+        <p class="muted">Compara el costo quincenal de la canasta frente al ingreso y la composición de los hogares registrados.</p>
     </div>
     <div class="hero-panel">
         <div class="hero-pill-row">
-            <span class="hero-pill hero-pill-pink">{{ dashboard_data.basket.context_count }} contextos</span>
-            <span class="hero-pill hero-pill-cyan">{{ products|length }} productos</span>
-            <span class="hero-pill hero-pill-gold">Promedio general</span>
+            <span class="hero-pill hero-pill-pink">{{ dashboard_data.basket.product_count }} productos</span>
+            <span class="hero-pill hero-pill-cyan">{{ dashboard_data.store_options|length }} supermercados</span>
+            <span class="hero-pill hero-pill-gold">{{ dashboard_data.basket.context_count }} contextos</span>
         </div>
-        <p>La vista del tablero queda fija en modo general, usando comparación global entre hogares y cadenas registradas.</p>
+        <p>La canasta base es semanal para una familia de 4 y se proyecta a quincena según integrantes y menores de cada contexto.</p>
     </div>
 </section>
 
 {% if not products %}
     <section class="empty-state">
         <h2>No hay productos registrados</h2>
-        <p>Agrega productos y precios para activar los cálculos del tablero.</p>
+        <p>Importa la hoja de cálculo o agrega productos para activar el dashboard.</p>
         <a class="button primary" href="{{ url_for('products.products') }}">Agregar productos</a>
     </section>
 {% else %}
-    <section class="kpi-grid">
+    <section class="kpi-grid context-kpis">
         <article class="card kpi-card kpi-card-pink">
-            <span>Costo promedio general</span>
-            <strong>${{ "%.2f"|format(dashboard_data.basket.total) }}</strong>
-            <small>Promedio entre {{ dashboard_data.basket.context_count }} contextos</small>
+            <span>Canasta promedio por contexto</span>
+            <strong>${{ "%.2f"|format(dashboard_data.context_summary.average_basket) }}</strong>
+            <small>Costo quincenal en la tienda más barata para cada hogar</small>
         </article>
         <article class="card kpi-card kpi-card-cyan">
-            <span>Costo promedio por persona</span>
-            <strong>${{ "%.2f"|format(dashboard_data.basket.cost_per_person) }}</strong>
-            <small>Media de hogares: {{ dashboard_data.basket.average_people }} personas</small>
+            <span>Presión promedio sobre ingreso</span>
+            <strong>{{ "%.2f"|format(dashboard_data.context_summary.average_income_pressure) }}%</strong>
+            <small>Canasta quincenal contra ingreso quincenal</small>
         </article>
         <article class="card kpi-card kpi-card-violet">
-            <span>Presión promedio sobre ingreso</span>
-            <strong>{{ "%.2f"|format(dashboard_data.basket.percent_income) }}%</strong>
-            <small>Ingreso medio observado: ${{ "%.2f"|format(dashboard_data.basket.average_income) }}</small>
+            <span>Mayor presión familiar</span>
+            <strong>{{ dashboard_data.context_summary.highest_pressure_context }}</strong>
+            <small>{{ "%.2f"|format(dashboard_data.context_summary.highest_pressure) }}% del ingreso quincenal</small>
         </article>
         <article class="card kpi-card kpi-card-gold">
-            <span>Tienda más barata</span>
-            <strong>{{ dashboard_data.cheapest_store.store }}</strong>
-            <small>Promedio general: ${{ "%.2f"|format(dashboard_data.cheapest_store.total) }}</small>
+            <span>Hogares con un ingreso</span>
+            <strong>{{ dashboard_data.context_summary.one_earner_count }}</strong>
+            <small>Contextos donde solo una persona aporta ingresos</small>
         </article>
         <article class="card kpi-card kpi-card-mint">
-            <span>Producto más caro</span>
-            <strong>{{ dashboard_data.most_expensive_product.name }}</strong>
-            <small>Promedio: ${{ "%.2f"|format(dashboard_data.most_expensive_product.price) }}</small>
+            <span>Supermercado más barato</span>
+            <strong>{{ dashboard_data.cheapest_store.store }}</strong>
+            <small>Canasta semanal base: ${{ "%.2f"|format(dashboard_data.cheapest_store.total) }}</small>
         </article>
     </section>
 
-    <section class="charts-grid">
-        <article class="card chart-card">
+    {% if not contexts %}
+        <section class="empty-state compact">
+            <h2>No hay contextos registrados</h2>
+            <p>Agrega hogares para visualizar la relación entre ingreso, perceptores y costo de la canasta.</p>
+            <a class="button primary" href="{{ url_for('contexts.contexts') }}">Agregar contextos</a>
+        </section>
+    {% else %}
+        <section class="charts-grid dashboard-charts">
+            <article class="card chart-card">
+                <div class="section-title">
+                    <h2>Ingreso quincenal contra canasta</h2>
+                    <p>Relación entre ingreso disponible y costo de la canasta por contexto.</p>
+                </div>
+                <div class="chart-frame">
+                    <canvas id="incomeBasketChart"></canvas>
+                </div>
+            </article>
+            <article class="card chart-card">
+                <div class="section-title">
+                    <h2>Presión de la canasta por hogar</h2>
+                    <p>Porcentaje del ingreso quincenal que absorbe la canasta.</p>
+                </div>
+                <div class="chart-frame">
+                    <canvas id="pressureByContextChart"></canvas>
+                </div>
+            </article>
+            <article class="card chart-card">
+                <div class="section-title">
+                    <h2>Canasta e ingreso por integrante</h2>
+                    <p>Lectura por persona para comparar hogares de distinto tamaño.</p>
+                </div>
+                <div class="chart-frame">
+                    <canvas id="perPersonChart"></canvas>
+                </div>
+            </article>
+            <article class="card chart-card">
+                <div class="section-title">
+                    <h2>Integrantes, perceptores y presión</h2>
+                    <p>El tamaño del punto indica cuántas personas aportan ingresos.</p>
+                </div>
+                <div class="chart-frame">
+                    <canvas id="earnersScatterChart"></canvas>
+                </div>
+            </article>
+        </section>
+    {% endif %}
+
+    <section class="charts-grid dashboard-charts">
+        <article class="card chart-card tall-chart">
             <div class="section-title">
-                <h2>Costo total por contexto</h2>
-                <p>Comparación directa del costo mensual estimado entre hogares.</p>
+                <h2>Productos con mayor variación</h2>
+                <p>Diferencia entre el precio más bajo y el más alto por producto.</p>
             </div>
             <div class="chart-frame">
-                <canvas id="contextTotalsChart"></canvas>
+                <canvas id="priceRangeChart"></canvas>
             </div>
         </article>
-        <article class="card chart-card">
+        <article class="card chart-card tall-chart">
             <div class="section-title">
-                <h2>Costo por persona</h2>
-                <p>Comparación del gasto individual equivalente por contexto.</p>
+                <h2>Comparación de los 24 productos</h2>
+                <p>Precios de todos los productos separados por supermercado.</p>
             </div>
             <div class="chart-frame">
-                <canvas id="contextPerPersonChart"></canvas>
-            </div>
-        </article>
-        <article class="card chart-card">
-            <div class="section-title">
-                <h2>Presión sobre ingreso</h2>
-                <p>Qué porcentaje del ingreso mensual absorbe la canasta en cada contexto.</p>
-            </div>
-            <div class="chart-frame">
-                <canvas id="contextIncomeChart"></canvas>
-            </div>
-        </article>
-        <article class="card chart-card">
-            <div class="section-title">
-                <h2>Tiendas por contexto</h2>
-                <p>Comparación agrupada del costo estimado en Walmart, Bodega Aurrera y Chedraui.</p>
-            </div>
-            <div class="chart-frame">
-                <canvas id="storesByContextChart"></canvas>
-            </div>
-        </article>
-        <article class="card chart-card">
-            <div class="section-title">
-                <h2>Ingreso contra costo</h2>
-                <p>Ubica cada contexto según su ingreso mensual y el costo de su canasta.</p>
-            </div>
-            <div class="chart-frame">
-                <canvas id="scatterChart"></canvas>
-            </div>
-        </article>
-        <article class="card chart-card">
-            <div class="section-title">
-                <h2>Perfil de contextos</h2>
-                <p>Lectura comparada de costo total, costo por persona, ingreso y tamaño del hogar.</p>
-            </div>
-            <div class="chart-frame">
-                <canvas id="radarChart"></canvas>
+                <canvas id="allProductsComparisonChart"></canvas>
             </div>
         </article>
     </section>
 
-    <section class="data-grid">
+    <section class="data-grid analytics-grid">
         <article class="card content-card">
             <div class="section-title">
-                <h2>Costo por tienda</h2>
-                <p>Promedio general por cadena, ordenado de menor a mayor costo.</p>
+                <h2>Mayores diferencias de precio</h2>
+                <p>Productos donde conviene comparar tienda antes de comprar.</p>
             </div>
-            <div class="table-wrap">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Tienda</th>
-                            <th>Costo estimado</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for item in dashboard_data.store_costs %}
-                            <tr>
-                                <td>{{ item.store }}</td>
-                                <td>${{ "%.2f"|format(item.total) }}</td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
+            <div class="variation-list" id="variationList"></div>
         </article>
         <article class="card content-card">
             <div class="section-title">
-                <h2>Contextos</h2>
-                <p>Comparación directa por hogar dentro de la vista general.</p>
+                <h2>Contextos analizados</h2>
+                <p>Ingreso quincenal, perceptores y presión de la canasta por hogar.</p>
             </div>
-            <div class="table-wrap">
+            <div class="table-wrap large-table">
                 <table>
                     <thead>
                         <tr>
                             <th>Contexto</th>
-                            <th>Total</th>
-                            <th>Por persona</th>
+                            <th>Integrantes</th>
+                            <th>Perceptores</th>
+                            <th>Ingreso quincenal</th>
+                            <th>Canasta quincenal</th>
                             <th>% ingreso</th>
+                            <th>Tienda</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {% for item in dashboard_data.context_comparison %}
+                        {% for context in dashboard_data.context_comparison %}
                             <tr>
-                                <td>{{ item.name }}</td>
-                                <td>${{ "%.2f"|format(item.total) }}</td>
-                                <td>${{ "%.2f"|format(item.per_person) }}</td>
-                                <td>{{ "%.2f"|format(item.percent_income) }}%</td>
+                                <td>{{ context.name }}</td>
+                                <td>{{ context.people }}</td>
+                                <td>{{ context.earners }}</td>
+                                <td>${{ "%.2f"|format(context.biweekly_income) }}</td>
+                                <td>${{ "%.2f"|format(context.total) }}</td>
+                                <td>{{ "%.2f"|format(context.percent_income) }}%</td>
+                                <td>{{ context.store }}</td>
                             </tr>
                         {% endfor %}
                     </tbody>
                 </table>
             </div>
         </article>
+    </section>
+
+    <section class="card content-card product-table-card">
+        <div class="section-title">
+            <h2>Tabla de precios de los 24 productos</h2>
+            <p>Datos importados desde la hoja de cálculo, con promedio y variación por producto.</p>
+        </div>
+        <div class="table-wrap large-table">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Producto</th>
+                        <th>Presentación</th>
+                        {% for store in dashboard_data.store_options %}
+                            <th>{{ store }}</th>
+                        {% endfor %}
+                        <th>Más barato</th>
+                        <th>Promedio</th>
+                        <th>Variación</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for product in dashboard_data.products %}
+                        <tr>
+                            <td>{{ product.name }}</td>
+                            <td>{{ product.presentation }}</td>
+                            {% for store in dashboard_data.store_options %}
+                                <td>${{ "%.2f"|format(product.prices.get(store, 0)) }}</td>
+                            {% endfor %}
+                            <td>{{ product.cheapest_store }}</td>
+                            <td>${{ "%.2f"|format(product.average_market_price) }}</td>
+                            <td>${{ "%.2f"|format(product.price_variance) }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </section>
 {% endif %}
 {% endblock %}

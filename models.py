@@ -7,15 +7,18 @@ db = SQLAlchemy()
 
 
 class Product(db.Model):
-    """Producto de la canasta básica y su cantidad de referencia."""
+    """Basic basket product and its reference presentation."""
 
     __tablename__ = "products"
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(120), nullable=False)
     category = db.Column(db.String(80), nullable=True)
+    presentation = db.Column(db.String(160), nullable=True)
     quantity_value = db.Column(db.Float, nullable=False, default=1.0)
     quantity_unit = db.Column(db.String(12), nullable=False, default="pza")
+    source_key = db.Column(db.String(160), nullable=True, index=True)
+    is_basic_basket = db.Column(db.Boolean, nullable=False, default=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
 
     prices = db.relationship(
@@ -27,6 +30,8 @@ class Product(db.Model):
 
     @property
     def display_quantity(self):
+        if self.presentation:
+            return self.presentation
         numeric_value = float(self.quantity_value or 0)
         value = int(numeric_value) if numeric_value.is_integer() else numeric_value
         return f"{value:g} {self.quantity_unit}"
@@ -68,6 +73,13 @@ class Product(db.Model):
             return 0
         return sum(item.price for item in self.prices) / len(self.prices)
 
+    @property
+    def price_variance(self):
+        if not self.prices:
+            return 0
+        values = [item.price for item in self.prices]
+        return max(values) - min(values)
+
     def price_for_store(self, store_name):
         if not store_name:
             return None
@@ -79,7 +91,7 @@ class Product(db.Model):
 
 
 class StorePrice(db.Model):
-    """Precio de un producto en una tienda específica."""
+    """Product price for a specific store."""
 
     __tablename__ = "store_prices"
     __table_args__ = (
@@ -102,7 +114,7 @@ class StorePrice(db.Model):
 
 
 class Context(db.Model):
-    """Contexto socioeconómico usado para estimar el costo de consumo."""
+    """Household context used to estimate consumption cost."""
 
     __tablename__ = "contexts"
 

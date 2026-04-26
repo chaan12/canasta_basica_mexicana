@@ -1,8 +1,8 @@
-# Tablero de Canasta Básica Mexicana
+# Mexican Basic Basket Dashboard
 
-Aplicación web en Flask para estimar y comparar el costo de la canasta básica mexicana por producto, tienda y contexto socioeconómico.
+Flask application for simulating biweekly household spending and comparing the Mexican basic basket across supermarkets.
 
-## Ejecución local
+## Local Run
 
 ```bash
 python3 -m venv .venv
@@ -11,29 +11,28 @@ pip install -r requirements.txt
 python app.py
 ```
 
-Abre `http://127.0.0.1:5000`.
+Open `http://127.0.0.1:5000`.
 
-La base SQLite se crea automáticamente en `instance/canasta_basica.db` y se llena con datos iniciales si está vacía.
+SQLite is created automatically in `instance/canasta_basica.db`. The app synchronizes the 24 basic basket products from `data/basic_basket.json` at startup.
 
-## Despliegue en PythonAnywhere
+## Importing the Spreadsheet
 
-1. Sube el proyecto a PythonAnywhere.
-2. Crea un entorno virtual e instala dependencias:
+The spreadsheet is the source for product names, presentations, supermarket prices, cheapest store, average price, and price variance.
+
+```bash
+python3 scripts/import_catalog.py "/path/to/Hoja de cálculo sin título.xlsx"
+```
+
+The importer writes `data/basic_basket.json`. You can also set `BASKET_EXCEL_PATH` to force the app to read a spreadsheet directly at startup.
+
+## Deployment Notes
+
+1. Upload the project to the server.
+2. Create a virtual environment and install dependencies:
 
 ```bash
 pip install -r requirements.txt
 ```
 
-3. En la pestaña **Web**, configura Flask con el archivo WSGI.
-4. En el archivo WSGI usa:
-
-```python
-import sys
-path = "/home/tu_usuario/canasta_basica_mexicana"
-if path not in sys.path:
-    sys.path.append(path)
-
-from app import app as application
-```
-
-5. Recarga la aplicación web desde PythonAnywhere.
+3. Configure the WSGI entry point to import `app` from `app.py`.
+4. Reload the web application.

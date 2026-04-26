@@ -1,5 +1,7 @@
 import re
 
+from services.catalog_importer import load_store_names
+
 
 PRODUCT_CATEGORIES = [
     "Proteínas animales",
@@ -11,7 +13,7 @@ PRODUCT_CATEGORIES = [
     "Higiene personal y del hogar",
 ]
 
-STORE_OPTIONS = ["Walmart", "Bodega Aurrera", "Chedraui"]
+STORE_OPTIONS = load_store_names()
 
 
 def store_field_name(store_name):

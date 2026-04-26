@@ -1,0 +1,426 @@
+{
+  "source": {
+    "file_name": "Hoja de cálculo sin título.xlsx",
+    "worksheet": "Hoja 1"
+  },
+  "basket_reference": {
+    "people": 4,
+    "period": "weekly",
+    "biweekly_multiplier": 2
+  },
+  "stores": [
+    "Walmart",
+    "Chedraui",
+    "Bodega Aurrera"
+  ],
+  "products": [
+    {
+      "source_key": "aceite_vegetal_comestible",
+      "name": "Aceite vegetal comestible",
+      "presentation": "1 pieza de 946 ml",
+      "quantity_value": 946.0,
+      "quantity_unit": "ml",
+      "category": "Abarrotes",
+      "prices": {
+        "Walmart": 45.0,
+        "Chedraui": 45.0,
+        "Bodega Aurrera": 44.0
+      },
+      "cheapest_supermarket": "Bodega Aurrera",
+      "most_expensive_supermarket": "Walmart",
+      "average_market_price": 44.67,
+      "price_variance": 1.0
+    },
+    {
+      "source_key": "arroz_en_grano",
+      "name": "Arroz en grano",
+      "presentation": "1 kg",
+      "quantity_value": 1.0,
+      "quantity_unit": "kg",
+      "category": "Cereales y derivados",
+      "prices": {
+        "Walmart": 38.0,
+        "Chedraui": 38.0,
+        "Bodega Aurrera": 37.0
+      },
+      "cheapest_supermarket": "Bodega Aurrera",
+      "most_expensive_supermarket": "Walmart",
+      "average_market_price": 37.67,
+      "price_variance": 1.0
+    },
+    {
+      "source_key": "atun_en_aceite",
+      "name": "Atún en aceite",
+      "presentation": "2 latas de 140 g",
+      "quantity_value": 280.0,
+      "quantity_unit": "g",
+      "category": "Proteínas animales",
+      "prices": {
+        "Walmart": 48.0,
+        "Chedraui": 48.0,
+        "Bodega Aurrera": 40.0
+      },
+      "cheapest_supermarket": "Bodega Aurrera",
+      "most_expensive_supermarket": "Walmart",
+      "average_market_price": 45.33,
+      "price_variance": 8.0
+    },
+    {
+      "source_key": "azucar_estandar",
+      "name": "Azúcar estándar",
+      "presentation": "1 kg",
+      "quantity_value": 1.0,
+      "quantity_unit": "kg",
+      "category": "Abarrotes",
+      "prices": {
+        "Walmart": 25.0,
+        "Chedraui": 23.0,
+        "Bodega Aurrera": 25.0
+      },
+      "cheapest_supermarket": "Chedraui",
+      "most_expensive_supermarket": "Walmart",
+      "average_market_price": 24.33,
+      "price_variance": 2.0
+    },
+    {
+      "source_key": "carne_de_res",
+      "name": "Carne de res",
+      "presentation": "1 kg",
+      "quantity_value": 1.0,
+      "quantity_unit": "kg",
+      "category": "Proteínas animales",
+      "prices": {
+        "Walmart": 215.0,
+        "Chedraui": 115.19,
+        "Bodega Aurrera": 228.0
+      },
+      "cheapest_supermarket": "Chedraui",
+      "most_expensive_supermarket": "Bodega Aurrera",
+      "average_market_price": 186.06,
+      "price_variance": 112.81
+    },
+    {
+      "source_key": "cebolla_blanca",
+      "name": "Cebolla blanca",
+      "presentation": "1 kg",
+      "quantity_value": 1.0,
+      "quantity_unit": "kg",
+      "category": "Frutas y verduras",
+      "prices": {
+        "Walmart": 32.0,
+        "Chedraui": 29.9,
+        "Bodega Aurrera": 28.0
+      },
+      "cheapest_supermarket": "Bodega Aurrera",
+      "most_expensive_supermarket": "Walmart",
+      "average_market_price": 29.97,
+      "price_variance": 4.0
+    },
+    {
+      "source_key": "chile_jalapeno",
+      "name": "Chile jalapeño",
+      "presentation": "1 kg",
+      "quantity_value": 1.0,
+      "quantity_unit": "kg",
+      "category": "Frutas y verduras",
+      "prices": {
+        "Walmart": 39.0,
+        "Chedraui": 39.0,
+        "Bodega Aurrera": 45.0
+      },
+      "cheapest_supermarket": "Walmart",
+      "most_expensive_supermarket": "Bodega Aurrera",
+      "average_market_price": 41.0,
+      "price_variance": 6.0
+    },
+    {
+      "source_key": "carne_de_cerdo",
+      "name": "Carne de cerdo",
+      "presentation": "1 kg",
+      "quantity_value": 1.0,
+      "quantity_unit": "kg",
+      "category": "Proteínas animales",
+      "prices": {
+        "Walmart": 132.0,
+        "Chedraui": 104.0,
+        "Bodega Aurrera": 130.0
+      },
+      "cheapest_supermarket": "Chedraui",
+      "most_expensive_supermarket": "Walmart",
+      "average_market_price": 122.0,
+      "price_variance": 28.0
+    },
+    {
+      "source_key": "frijol_negro",
+      "name": "Frijol negro",
+      "presentation": "900 g",
+      "quantity_value": 900.0,
+      "quantity_unit": "g",
+      "category": "Leguminosas",
+      "prices": {
+        "Walmart": 48.0,
+        "Chedraui": 67.0,
+        "Bodega Aurrera": 47.0
+      },
+      "cheapest_supermarket": "Bodega Aurrera",
+      "most_expensive_supermarket": "Chedraui",
+      "average_market_price": 54.0,
+      "price_variance": 20.0
+    },
+    {
+      "source_key": "huevo_de_gallina",
+      "name": "Huevo de gallina",
+      "presentation": "1 paquete de 18 piezas",
+      "quantity_value": 18.0,
+      "quantity_unit": "pza",
+      "category": "Proteínas animales",
+      "prices": {
+        "Walmart": 60.0,
+        "Chedraui": 63.0,
+        "Bodega Aurrera": 59.0
+      },
+      "cheapest_supermarket": "Bodega Aurrera",
+      "most_expensive_supermarket": "Chedraui",
+      "average_market_price": 60.67,
+      "price_variance": 4.0
+    },
+    {
+      "source_key": "jabon_de_tocador",
+      "name": "Jabón de tocador",
+      "presentation": "1 pieza",
+      "quantity_value": 1.0,
+      "quantity_unit": "pza",
+      "category": "Higiene personal y del hogar",
+      "prices": {
+        "Walmart": 33.0,
+        "Chedraui": 32.0,
+        "Bodega Aurrera": 32.0
+      },
+      "cheapest_supermarket": "Chedraui",
+      "most_expensive_supermarket": "Walmart",
+      "average_market_price": 32.33,
+      "price_variance": 1.0
+    },
+    {
+      "source_key": "jitomate_saladet",
+      "name": "Jitomate saladet",
+      "presentation": "1 kg",
+      "quantity_value": 1.0,
+      "quantity_unit": "kg",
+      "category": "Frutas y verduras",
+      "prices": {
+        "Walmart": 57.0,
+        "Chedraui": 57.0,
+        "Bodega Aurrera": 57.0
+      },
+      "cheapest_supermarket": "Walmart",
+      "most_expensive_supermarket": "Walmart",
+      "average_market_price": 57.0,
+      "price_variance": 0.0
+    },
+    {
+      "source_key": "leche_de_vaca",
+      "name": "Leche de vaca",
+      "presentation": "5 litros",
+      "quantity_value": 5.0,
+      "quantity_unit": "l",
+      "category": "Lácteos",
+      "prices": {
+        "Walmart": 185.3,
+        "Chedraui": 185.0,
+        "Bodega Aurrera": 150.0
+      },
+      "cheapest_supermarket": "Bodega Aurrera",
+      "most_expensive_supermarket": "Walmart",
+      "average_market_price": 173.43,
+      "price_variance": 35.3
+    },
+    {
+      "source_key": "limon",
+      "name": "Limón",
+      "presentation": "1 kg",
+      "quantity_value": 1.0,
+      "quantity_unit": "kg",
+      "category": "Frutas y verduras",
+      "prices": {
+        "Walmart": 60.0,
+        "Chedraui": 59.0,
+        "Bodega Aurrera": 60.0
+      },
+      "cheapest_supermarket": "Chedraui",
+      "most_expensive_supermarket": "Walmart",
+      "average_market_price": 59.67,
+      "price_variance": 1.0
+    },
+    {
+      "source_key": "manzana",
+      "name": "Manzana",
+      "presentation": "1 kg",
+      "quantity_value": 1.0,
+      "quantity_unit": "kg",
+      "category": "Frutas y verduras",
+      "prices": {
+        "Walmart": 40.0,
+        "Chedraui": 40.0,
+        "Bodega Aurrera": 39.0
+      },
+      "cheapest_supermarket": "Bodega Aurrera",
+      "most_expensive_supermarket": "Walmart",
+      "average_market_price": 39.67,
+      "price_variance": 1.0
+    },
+    {
+      "source_key": "platano",
+      "name": "Plátano",
+      "presentation": "1 kg",
+      "quantity_value": 1.0,
+      "quantity_unit": "kg",
+      "category": "Frutas y verduras",
+      "prices": {
+        "Walmart": 28.0,
+        "Chedraui": 22.0,
+        "Bodega Aurrera": 35.0
+      },
+      "cheapest_supermarket": "Chedraui",
+      "most_expensive_supermarket": "Bodega Aurrera",
+      "average_market_price": 28.33,
+      "price_variance": 13.0
+    },
+    {
+      "source_key": "pan_blanco_de_caja",
+      "name": "Pan blanco de caja",
+      "presentation": "1 paquete de 680 g",
+      "quantity_value": 680.0,
+      "quantity_unit": "g",
+      "category": "Cereales y derivados",
+      "prices": {
+        "Walmart": 55.0,
+        "Chedraui": 54.0,
+        "Bodega Aurrera": 43.0
+      },
+      "cheapest_supermarket": "Bodega Aurrera",
+      "most_expensive_supermarket": "Walmart",
+      "average_market_price": 50.67,
+      "price_variance": 12.0
+    },
+    {
+      "source_key": "papa_blanca",
+      "name": "Papa blanca",
+      "presentation": "1 kg",
+      "quantity_value": 1.0,
+      "quantity_unit": "kg",
+      "category": "Frutas y verduras",
+      "prices": {
+        "Walmart": 59.9,
+        "Chedraui": 47.0,
+        "Bodega Aurrera": 58.9
+      },
+      "cheapest_supermarket": "Chedraui",
+      "most_expensive_supermarket": "Walmart",
+      "average_market_price": 55.27,
+      "price_variance": 12.9
+    },
+    {
+      "source_key": "papel_higienico",
+      "name": "Papel higiénico",
+      "presentation": "1 bolsa de 4 piezas",
+      "quantity_value": 4.0,
+      "quantity_unit": "pza",
+      "category": "Higiene personal y del hogar",
+      "prices": {
+        "Walmart": 41.0,
+        "Chedraui": 40.0,
+        "Bodega Aurrera": 40.0
+      },
+      "cheapest_supermarket": "Chedraui",
+      "most_expensive_supermarket": "Walmart",
+      "average_market_price": 40.33,
+      "price_variance": 1.0
+    },
+    {
+      "source_key": "pasta_para_sopa",
+      "name": "Pasta para sopa",
+      "presentation": "1 paquete de 220 g",
+      "quantity_value": 220.0,
+      "quantity_unit": "g",
+      "category": "Cereales y derivados",
+      "prices": {
+        "Walmart": 13.5,
+        "Chedraui": 8.5,
+        "Bodega Aurrera": 13.0
+      },
+      "cheapest_supermarket": "Chedraui",
+      "most_expensive_supermarket": "Walmart",
+      "average_market_price": 11.67,
+      "price_variance": 5.0
+    },
+    {
+      "source_key": "carne_de_pollo",
+      "name": "Carne de pollo",
+      "presentation": "1 kg",
+      "quantity_value": 1.0,
+      "quantity_unit": "kg",
+      "category": "Proteínas animales",
+      "prices": {
+        "Walmart": 50.0,
+        "Chedraui": 92.25,
+        "Bodega Aurrera": 92.0
+      },
+      "cheapest_supermarket": "Walmart",
+      "most_expensive_supermarket": "Chedraui",
+      "average_market_price": 78.08,
+      "price_variance": 42.25
+    },
+    {
+      "source_key": "sardina_en_tomate",
+      "name": "Sardina en tomate",
+      "presentation": "1 lata de 425 g",
+      "quantity_value": 425.0,
+      "quantity_unit": "g",
+      "category": "Proteínas animales",
+      "prices": {
+        "Walmart": 48.0,
+        "Chedraui": 48.0,
+        "Bodega Aurrera": 47.0
+      },
+      "cheapest_supermarket": "Bodega Aurrera",
+      "most_expensive_supermarket": "Walmart",
+      "average_market_price": 47.67,
+      "price_variance": 1.0
+    },
+    {
+      "source_key": "tortilla_de_maiz",
+      "name": "Tortilla de maíz",
+      "presentation": "1 kg",
+      "quantity_value": 1.0,
+      "quantity_unit": "kg",
+      "category": "Cereales y derivados",
+      "prices": {
+        "Walmart": 12.7,
+        "Chedraui": 12.5,
+        "Bodega Aurrera": 15.5
+      },
+      "cheapest_supermarket": "Chedraui",
+      "most_expensive_supermarket": "Bodega Aurrera",
+      "average_market_price": 13.57,
+      "price_variance": 3.0
+    },
+    {
+      "source_key": "zanahoria",
+      "name": "Zanahoria",
+      "presentation": "1 kg",
+      "quantity_value": 1.0,
+      "quantity_unit": "kg",
+      "category": "Frutas y verduras",
+      "prices": {
+        "Walmart": 19.0,
+        "Chedraui": 23.8,
+        "Bodega Aurrera": 18.0
+      },
+      "cheapest_supermarket": "Bodega Aurrera",
+      "most_expensive_supermarket": "Chedraui",
+      "average_market_price": 20.27,
+      "price_variance": 5.8
+    }
+  ]
+}

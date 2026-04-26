@@ -6,17 +6,17 @@ from models import db
 from routes.contexts import contexts_bp
 from routes.dashboard import dashboard_bp
 from routes.products import products_bp
-from services.seed import normalize_catalogs, seed_database
+from services.seed import ensure_database_schema, normalize_catalogs, seed_database
 
 
 def create_app():
-    """Crea la aplicación Flask y prepara la base de datos SQLite."""
+    """Create the Flask app and prepare the SQLite database."""
     app = Flask(__name__, instance_relative_config=True)
     os.makedirs(app.instance_path, exist_ok=True)
 
     database_path = os.path.join(app.instance_path, "canasta_basica.db")
     app.config.update(
-        SECRET_KEY=os.environ.get("SECRET_KEY", "cambia-esta-clave-en-produccion"),
+        SECRET_KEY=os.environ.get("SECRET_KEY", "change-this-key-in-production"),
         SQLALCHEMY_DATABASE_URI=f"sqlite:///{database_path}",
         SQLALCHEMY_TRACK_MODIFICATIONS=False,
     )
@@ -33,6 +33,7 @@ def create_app():
 
     with app.app_context():
         db.create_all()
+        ensure_database_schema()
         seed_database()
         normalize_catalogs()
 
@@ -43,8 +44,6 @@ app = create_app()
 
 
 if __name__ == "__main__":
-    # Ejecución local: python app.py
-    # En PythonAnywhere, importa la variable "app" desde este archivo en el WSGI.
     host = os.environ.get("HOST", "127.0.0.1")
     port = int(os.environ.get("PORT", "5000"))
     debug = os.environ.get("FLASK_DEBUG", "1") == "1"

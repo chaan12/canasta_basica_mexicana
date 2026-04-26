@@ -9,7 +9,9 @@ dashboard_bp = Blueprint("dashboard", __name__)
 
 @dashboard_bp.route("/dashboard")
 def dashboard():
-    products = Product.query.order_by(Product.name.asc()).all()
+    products = Product.query.filter_by(is_basic_basket=True).order_by(Product.name.asc()).all()
+    if not products:
+        products = Product.query.order_by(Product.name.asc()).all()
     contexts = Context.query.order_by(Context.created_at.asc()).all()
 
     dashboard_data = build_dashboard_data(

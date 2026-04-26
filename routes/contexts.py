@@ -21,7 +21,7 @@ def _to_float(value, default=0):
 
 
 def _context_from_form(context=None):
-    """Llena un contexto con datos del formulario."""
+    """Populate a context with sanitized form data."""
     if context is None:
         context = Context()
 
@@ -42,12 +42,28 @@ def _context_from_form(context=None):
     return context
 
 
+def _context_errors(context):
+    errors = []
+    if context.children > context.number_people:
+        errors.append("El número de menores no puede superar el total de integrantes.")
+    if context.dependents_count > context.number_people:
+        errors.append("Los dependientes no pueden superar el total de integrantes.")
+    if context.earners > context.number_people:
+        errors.append("Las personas con ingreso no pueden superar el total de integrantes.")
+    if context.children + context.adults + context.elderly > context.number_people:
+        errors.append("La composición del hogar no puede superar el total de integrantes.")
+    return errors
+
+
 @contexts_bp.route("/", methods=["GET", "POST"])
 def contexts():
     if request.method == "POST":
         context = _context_from_form()
         if not context.name:
             flash("El nombre del contexto es obligatorio.", "error")
+            return redirect(url_for("contexts.contexts"))
+        for error in _context_errors(context):
+            flash(error, "error")
             return redirect(url_for("contexts.contexts"))
 
         db.session.add(context)
@@ -67,6 +83,9 @@ def edit_context(context_id):
         _context_from_form(context)
         if not context.name:
             flash("El nombre del contexto es obligatorio.", "error")
+            return redirect(url_for("contexts.edit_context", context_id=context.id))
+        for error in _context_errors(context):
+            flash(error, "error")
             return redirect(url_for("contexts.edit_context", context_id=context.id))
 
         db.session.commit()
