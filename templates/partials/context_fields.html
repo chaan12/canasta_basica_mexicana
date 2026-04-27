@@ -1,12 +1,19 @@
 {% set current = context if context is defined else none %}
+{% set adults_value = current.adult_count if current else 1 %}
+{% set children_value = current.child_count if current else 0 %}
+{% set household_type = current.household_type_label if current else "Vive solo" %}
 <div class="form-grid">
     <label>
         Nombre del contexto
-        <input type="text" name="name" value="{{ current.name if current else '' }}" placeholder="Ej. Familia urbana" required>
+        <input type="text" name="name" value="{{ current.name if current else '' }}" placeholder="Ej. Familia zona norte" required>
     </label>
     <label>
-        Número de personas
-        <input type="number" name="number_people" min="1" value="{{ current.number_people if current else 1 }}" required>
+        Tipo de hogar
+        <select name="household_model" id="contextHouseholdModel">
+            <option value="vive_solo" {% if household_type == "Vive solo" %}selected{% endif %}>Vive solo</option>
+            <option value="pareja" {% if household_type == "Pareja" %}selected{% endif %}>Pareja</option>
+            <option value="familia" {% if household_type == "Familia" %}selected{% endif %}>Familia</option>
+        </select>
     </label>
 </div>
 
@@ -14,24 +21,14 @@
     <h3>Composición del hogar</h3>
     <div class="form-grid">
         <label>
-            Menores
-            <input type="number" name="children" min="0" value="{{ current.children if current else 0 }}">
-        </label>
-        <label>
             Adultos
-            <input type="number" name="adults" min="0" value="{{ current.adults if current else 1 }}">
+            <input id="contextAdults" type="number" name="adults" min="1" max="20" step="1" value="{{ adults_value }}" required>
+            <small class="field-help">Debe existir al menos un adulto.</small>
         </label>
         <label>
-            Adultos mayores
-            <input type="number" name="elderly" min="0" value="{{ current.elderly if current else 0 }}">
-        </label>
-        <label>
-            Género
-            <input type="text" name="gender" value="{{ current.gender if current and current.gender else '' }}" placeholder="Opcional">
-        </label>
-        <label>
-            Dependientes
-            <input type="number" name="dependents_count" min="0" value="{{ current.dependents_count if current else 0 }}">
+            Niños
+            <input id="contextChildren" type="number" name="children" min="0" max="20" step="1" value="{{ children_value }}">
+            <small class="field-help">Usa 0 cuando no haya niños en el hogar.</small>
         </label>
     </div>
 </div>
@@ -41,11 +38,12 @@
     <div class="form-grid">
         <label>
             Ingreso mensual
-            <input type="number" name="monthly_income" min="0" step="0.01" value="{{ current.monthly_income if current else 0 }}">
+            <input type="text" name="monthly_income" inputmode="decimal" value="{{ current.monthly_income if current else 0 }}" placeholder="0.00">
         </label>
         <label>
             Personas con ingreso
-            <input type="number" name="earners" min="1" value="{{ current.earners if current else 1 }}">
+            <input type="number" name="earners" min="1" max="20" step="1" value="{{ current.earners if current else 1 }}">
+            <small class="field-help">No puede superar el número de adultos.</small>
         </label>
         <label>
             Tipo de ingreso

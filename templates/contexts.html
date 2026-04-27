@@ -34,11 +34,12 @@
                     <div class="list-item">
                         <div>
                             <h3>{{ context.name }}</h3>
-                            <p>{{ context.number_people }} personas · Ingreso mensual: ${{ "%.2f"|format(context.monthly_income) }} · Consumo {{ context.consumption_level }}</p>
+                            <p>{{ context.household_type_label }} · {{ context.composition_label }} · Ingreso mensual: ${{ "%.2f"|format(context.monthly_income) }}</p>
                             <div class="tag-row">
-                                <span class="tag">{{ context.children }} menores</span>
-                                <span class="tag">{{ context.adults }} adultos</span>
-                                <span class="tag">{{ context.elderly }} mayores</span>
+                                <span class="tag">{{ context.adult_count }} adultos</span>
+                                <span class="tag">{{ context.child_count }} niños</span>
+                                <span class="tag">{{ context.earners }} con ingreso</span>
+                                <span class="tag">Consumo {{ context.consumption_level }}</span>
                                 <span class="tag">{{ context.purchase_frequency }}</span>
                             </div>
                         </div>
@@ -59,4 +60,8 @@
         {% endif %}
     </article>
 </section>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/context_form.js') }}"></script>
 {% endblock %}

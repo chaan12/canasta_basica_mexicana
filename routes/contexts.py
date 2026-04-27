@@ -1,23 +1,50 @@
+from math import isfinite
+
 from flask import Blueprint, flash, redirect, render_template, request, url_for
 
 from models import Context, db
 
 
 contexts_bp = Blueprint("contexts", __name__, url_prefix="/contextos")
+MAX_HOUSEHOLD_MEMBERS = 20
+MAX_MONTHLY_INCOME = 10000000
 
 
-def _to_int(value, default=0):
-    try:
-        return int(value)
-    except (TypeError, ValueError):
+def _normalize_number(value):
+    return str(value or "").replace("$", "").replace(",", "").replace(" ", "").strip()
+
+
+def _read_int(field_name, label, default, errors):
+    raw_value = request.form.get(field_name)
+    if raw_value is None or str(raw_value).strip() == "":
         return default
-
-
-def _to_float(value, default=0):
+    normalized_value = _normalize_number(raw_value)
     try:
-        return float(value)
-    except (TypeError, ValueError):
+        value = float(normalized_value)
+    except ValueError:
+        errors.append(f"{label} debe ser un número válido.")
         return default
+    if not isfinite(value):
+        errors.append(f"{label} debe ser un número válido.")
+        return default
+    if not value.is_integer():
+        errors.append(f"{label} debe ser un número entero.")
+    return int(value)
+
+
+def _read_float(field_name, label, default, errors):
+    raw_value = request.form.get(field_name)
+    if raw_value is None or str(raw_value).strip() == "":
+        return default
+    try:
+        value = float(_normalize_number(raw_value))
+    except ValueError:
+        errors.append(f"{label} debe ser un número válido.")
+        return default
+    if not isfinite(value):
+        errors.append(f"{label} debe ser un número válido.")
+        return default
+    return value
 
 
 def _context_from_form(context=None):
@@ -25,45 +52,74 @@ def _context_from_form(context=None):
     if context is None:
         context = Context()
 
+    errors = []
     context.name = request.form.get("name", "").strip()
-    context.number_people = max(_to_int(request.form.get("number_people"), 1), 1)
-    context.children = max(_to_int(request.form.get("children"), 0), 0)
-    context.adults = max(_to_int(request.form.get("adults"), 0), 0)
-    context.elderly = max(_to_int(request.form.get("elderly"), 0), 0)
-    context.gender = request.form.get("gender", "").strip() or None
-    context.dependents_count = max(_to_int(request.form.get("dependents_count"), 0), 0)
-    context.monthly_income = max(_to_float(request.form.get("monthly_income"), 0), 0)
-    context.earners = max(_to_int(request.form.get("earners"), 1), 1)
+    adults = _read_int("adults", "Adultos", 1, errors)
+    children = _read_int("children", "Niños", 0, errors)
+    monthly_income = _read_float("monthly_income", "Ingreso mensual", 0, errors)
+    earners = _read_int("earners", "Personas con ingreso", 1, errors)
+
+    if adults < 1:
+        errors.append("El hogar debe tener al menos un adulto.")
+        adults = 1
+    if children < 0:
+        errors.append("El número de niños no puede ser negativo.")
+        children = 0
+    if adults + children > MAX_HOUSEHOLD_MEMBERS:
+        errors.append(f"El hogar no puede superar {MAX_HOUSEHOLD_MEMBERS} integrantes.")
+    if monthly_income < 0:
+        errors.append("El ingreso mensual no puede ser negativo.")
+        monthly_income = 0
+    if monthly_income > MAX_MONTHLY_INCOME:
+        errors.append("El ingreso mensual está fuera del rango permitido.")
+        monthly_income = MAX_MONTHLY_INCOME
+    if earners < 1:
+        errors.append("Debe existir al menos una persona con ingreso.")
+        earners = 1
+    if earners > adults:
+        errors.append("Las personas con ingreso no pueden superar el número de adultos.")
+        earners = adults
+
+    context.adults = adults
+    context.children = children
+    context.number_people = adults + children
+    context.elderly = 0
+    context.gender = None
+    context.dependents_count = children
+    context.monthly_income = monthly_income
+    context.earners = earners
     context.income_type = request.form.get("income_type", "fijo")
     context.consumption_level = request.form.get("consumption_level", "medio")
     context.preferences = request.form.get("preferences", "economico")
     context.diet = request.form.get("diet", "").strip() or None
     context.purchase_frequency = request.form.get("purchase_frequency", "semanal")
-    return context
+    return context, errors
 
 
 def _context_errors(context):
     errors = []
-    if context.children > context.number_people:
-        errors.append("El número de menores no puede superar el total de integrantes.")
-    if context.dependents_count > context.number_people:
-        errors.append("Los dependientes no pueden superar el total de integrantes.")
-    if context.earners > context.number_people:
-        errors.append("Las personas con ingreso no pueden superar el total de integrantes.")
-    if context.children + context.adults + context.elderly > context.number_people:
-        errors.append("La composición del hogar no puede superar el total de integrantes.")
+    if context.adults < 1:
+        errors.append("El hogar debe tener al menos un adulto.")
+    if context.children < 0:
+        errors.append("El número de niños no puede ser negativo.")
+    if context.adults + context.children > MAX_HOUSEHOLD_MEMBERS:
+        errors.append(f"El hogar no puede superar {MAX_HOUSEHOLD_MEMBERS} integrantes.")
+    if context.earners > context.adults:
+        errors.append("Las personas con ingreso no pueden superar el número de adultos.")
     return errors
 
 
 @contexts_bp.route("/", methods=["GET", "POST"])
 def contexts():
     if request.method == "POST":
-        context = _context_from_form()
+        context, form_errors = _context_from_form()
         if not context.name:
             flash("El nombre del contexto es obligatorio.", "error")
             return redirect(url_for("contexts.contexts"))
-        for error in _context_errors(context):
+        errors = form_errors + _context_errors(context)
+        for error in errors:
             flash(error, "error")
+        if errors:
             return redirect(url_for("contexts.contexts"))
 
         db.session.add(context)
@@ -80,12 +136,14 @@ def edit_context(context_id):
     context = Context.query.get_or_404(context_id)
 
     if request.method == "POST":
-        _context_from_form(context)
+        context, form_errors = _context_from_form(context)
         if not context.name:
             flash("El nombre del contexto es obligatorio.", "error")
             return redirect(url_for("contexts.edit_context", context_id=context.id))
-        for error in _context_errors(context):
+        errors = form_errors + _context_errors(context)
+        for error in errors:
             flash(error, "error")
+        if errors:
             return redirect(url_for("contexts.edit_context", context_id=context.id))
 
         db.session.commit()

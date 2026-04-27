@@ -1,13 +1,13 @@
 {% extends "base.html" %}
 
-{% block title %}Dashboard | Canasta Básica Mexicana{% endblock %}
+{% block title %}Tablero | Canasta Básica Mexicana{% endblock %}
 
 {% block content %}
 <section class="page-header dashboard-header">
     <div class="dashboard-hero-copy">
-        <p class="eyebrow">Análisis por contextos</p>
-        <h1>Dashboard de canasta básica y hogares</h1>
-        <p class="muted">Compara el costo quincenal de la canasta frente al ingreso y la composición de los hogares registrados.</p>
+        <p class="eyebrow">Simulación financiera</p>
+        <h1>Tablero de canasta básica y hogares</h1>
+        <p class="muted">Evalúa ingreso, gastos y canasta básica con una composición flexible de adultos y niños.</p>
     </div>
     <div class="hero-panel">
         <div class="hero-pill-row">
@@ -15,52 +15,214 @@
             <span class="hero-pill hero-pill-cyan">{{ dashboard_data.store_options|length }} supermercados</span>
             <span class="hero-pill hero-pill-gold">{{ dashboard_data.basket.context_count }} contextos</span>
         </div>
-        <p>La canasta base es semanal para una familia de 4 y se proyecta a quincena según integrantes y menores de cada contexto.</p>
+        <p>La canasta base es semanal para 4 personas de referencia y se ajusta por adultos, niños y tienda seleccionada.</p>
     </div>
 </section>
 
 {% if not products %}
     <section class="empty-state">
         <h2>No hay productos registrados</h2>
-        <p>Importa la hoja de cálculo o agrega productos para activar el dashboard.</p>
+        <p>Importa la hoja de cálculo o agrega productos para activar el tablero.</p>
         <a class="button primary" href="{{ url_for('products.products') }}">Agregar productos</a>
     </section>
 {% else %}
-    <section class="kpi-grid context-kpis">
-        <article class="card kpi-card kpi-card-pink">
-            <span>Canasta promedio por contexto</span>
-            <strong>${{ "%.2f"|format(dashboard_data.context_summary.average_basket) }}</strong>
-            <small>Costo quincenal en la tienda más barata para cada hogar</small>
-        </article>
-        <article class="card kpi-card kpi-card-cyan">
-            <span>Presión promedio sobre ingreso</span>
-            <strong>{{ "%.2f"|format(dashboard_data.context_summary.average_income_pressure) }}%</strong>
-            <small>Canasta quincenal contra ingreso quincenal</small>
-        </article>
-        <article class="card kpi-card kpi-card-violet">
-            <span>Mayor presión familiar</span>
-            <strong>{{ dashboard_data.context_summary.highest_pressure_context }}</strong>
-            <small>{{ "%.2f"|format(dashboard_data.context_summary.highest_pressure) }}% del ingreso quincenal</small>
-        </article>
-        <article class="card kpi-card kpi-card-gold">
-            <span>Hogares con un ingreso</span>
-            <strong>{{ dashboard_data.context_summary.one_earner_count }}</strong>
-            <small>Contextos donde solo una persona aporta ingresos</small>
-        </article>
-        <article class="card kpi-card kpi-card-mint">
-            <span>Supermercado más barato</span>
-            <strong>{{ dashboard_data.cheapest_store.store }}</strong>
-            <small>Canasta semanal base: ${{ "%.2f"|format(dashboard_data.cheapest_store.total) }}</small>
-        </article>
-    </section>
-
     {% if not contexts %}
         <section class="empty-state compact">
             <h2>No hay contextos registrados</h2>
-            <p>Agrega hogares para visualizar la relación entre ingreso, perceptores y costo de la canasta.</p>
+            <p>Agrega hogares para visualizar ingreso, gastos, saldo y salud financiera por contexto.</p>
             <a class="button primary" href="{{ url_for('contexts.contexts') }}">Agregar contextos</a>
         </section>
     {% else %}
+        <section class="context-selector-bar" aria-label="Selector de contexto">
+            <div class="section-title">
+                <h2>Contexto activo</h2>
+                <p>Las métricas y gráficas se calculan con los contextos registrados.</p>
+            </div>
+            <label class="context-select-label">
+                Contexto
+                <select id="contextSelect">
+                    {% for context in dashboard_data.context_comparison %}
+                        <option value="{{ context.id }}">{{ context.name }}</option>
+                    {% endfor %}
+                </select>
+            </label>
+            <label class="context-select-label">
+                Mercado
+                <select id="storeSelect">
+                    <option value="" {% if not active_store %}selected{% endif %}>Más barato</option>
+                    {% for store in dashboard_data.store_options %}
+                        <option value="{{ store }}" {% if active_store == store %}selected{% endif %}>{{ store }}</option>
+                    {% endfor %}
+                </select>
+            </label>
+            <div class="context-meta-list" aria-live="polite">
+                <span id="contextHouseholdValue">-</span>
+                <span id="contextPeopleValue">-</span>
+                <span id="contextStoreValue">-</span>
+            </div>
+        </section>
+
+        <section class="kpi-grid finance-kpis executive-kpis" aria-label="Indicadores principales">
+            <article class="card kpi-card kpi-card-income" id="incomeKpi">
+                <span>Ingreso Total</span>
+                <strong id="incomeKpiValue">$0.00</strong>
+                <small id="incomeKpiNote">Ingreso mensual del contexto</small>
+            </article>
+            <article class="card kpi-card kpi-card-fixed" id="fixedKpi">
+                <span>Gasto Fijo</span>
+                <strong id="fixedKpiValue">$0.00</strong>
+                <small id="fixedKpiNote">Canasta y gastos comunes fijos</small>
+            </article>
+            <article class="card kpi-card kpi-card-variable" id="variableKpi">
+                <span>Gasto Variable</span>
+                <strong id="variableKpiValue">$0.00</strong>
+                <small id="variableKpiNote">Salud, limpieza y otros gastos</small>
+            </article>
+            <article class="card kpi-card kpi-card-balance" id="remainingKpi">
+                <span>Saldo Restante</span>
+                <strong id="remainingKpiValue">$0.00</strong>
+                <small id="remainingKpiNote">Disponible después de gastos</small>
+            </article>
+        </section>
+
+        <section class="context-finance-layout">
+            <article class="simulation-panel context-summary-panel">
+                <div class="section-title">
+                    <h2>Resumen del contexto</h2>
+                    <p>Datos mensuales calculados desde la composición del hogar y el ingreso registrado.</p>
+                </div>
+                <div class="basket-detail-list context-detail-list">
+                    <div>
+                        <span>Canasta mensual</span>
+                        <strong id="basketMonthlyValue">$0.00</strong>
+                    </div>
+                    <div>
+                        <span>Costo por integrante</span>
+                        <strong id="basketPerPersonValue">$0.00</strong>
+                    </div>
+                    <div>
+                        <span>Perceptores</span>
+                        <strong id="contextEarnersValue">0</strong>
+                    </div>
+                    <div>
+                        <span>Presión quincenal</span>
+                        <strong id="contextPressureValue">0%</strong>
+                    </div>
+                </div>
+            </article>
+
+            <aside class="health-panel status-green" id="financialHealthPanel" aria-live="polite">
+                <div class="health-status-row">
+                    <span class="traffic-light" aria-hidden="true"></span>
+                    <div>
+                        <p class="eyebrow">Salud financiera</p>
+                        <h2 id="healthStatusLabel">Saludable</h2>
+                    </div>
+                </div>
+                <strong id="healthScore">0%</strong>
+                <div class="health-meter" aria-hidden="true">
+                    <span id="healthMeterFill"></span>
+                </div>
+                <p id="healthStatusText">Selecciona un contexto para ver su estado financiero.</p>
+            </aside>
+        </section>
+
+        <section class="danger-alert" id="negativeBalanceAlert" hidden>
+            <strong>Saldo negativo</strong>
+            <span>Los gastos superan el ingreso mensual en este contexto.</span>
+        </section>
+
+        <section class="charts-grid dashboard-charts context-finance-charts">
+            <article class="card chart-card">
+                <div class="section-title">
+                    <h2>Distribución de gastos</h2>
+                    <p>Canasta básica y gastos comunes de casa del contexto seleccionado.</p>
+                </div>
+                <div class="chart-frame">
+                    <canvas id="expensePieChart"></canvas>
+                </div>
+            </article>
+            <article class="card chart-card">
+                <div class="section-title">
+                    <h2>Ingreso contra gastos</h2>
+                    <p>Ingreso total, gasto fijo, gasto variable y saldo restante.</p>
+                </div>
+                <div class="chart-frame">
+                    <canvas id="incomeExpenseChart"></canvas>
+                </div>
+            </article>
+            <article class="card chart-card">
+                <div class="section-title">
+                    <h2>Saldo disponible</h2>
+                    <p>Parte usada del ingreso y saldo restante del contexto.</p>
+                </div>
+                <div class="chart-frame">
+                    <canvas id="balanceChart"></canvas>
+                </div>
+            </article>
+            <article class="card chart-card">
+                <div class="section-title">
+                    <h2>Gasto por composición</h2>
+                    <p>Estimación de la canasta atribuida a adultos y niños.</p>
+                </div>
+                <div class="chart-frame">
+                    <canvas id="householdBreakdownChart"></canvas>
+                </div>
+            </article>
+            <article class="card chart-card wide-chart">
+                <div class="section-title">
+                    <h2>Comparación por supermercado</h2>
+                    <p>Costo mensual estimado de la canasta para el contexto seleccionado.</p>
+                </div>
+                <div class="chart-frame">
+                    <canvas id="storeBasketChart"></canvas>
+                </div>
+            </article>
+            <article class="card chart-card wide-chart">
+                <div class="section-title">
+                    <h2>Ingreso y gastos por contexto</h2>
+                    <p>Valores mensuales de ingreso total, gasto fijo, gasto variable y saldo restante.</p>
+                </div>
+                <div class="chart-frame">
+                    <canvas id="monthlyBudgetByContextChart"></canvas>
+                </div>
+            </article>
+        </section>
+
+        <section class="kpi-grid context-kpis">
+            <article class="card kpi-card kpi-card-pink">
+                <span>Canasta promedio por contexto</span>
+                <strong>${{ "%.2f"|format(dashboard_data.context_summary.average_basket) }}</strong>
+                <small>
+                    {% if active_store %}
+                        Costo quincenal en {{ active_store }}
+                    {% else %}
+                        Costo quincenal en la tienda más barata para cada hogar
+                    {% endif %}
+                </small>
+            </article>
+            <article class="card kpi-card kpi-card-cyan">
+                <span>Presión promedio sobre ingreso</span>
+                <strong>{{ "%.2f"|format(dashboard_data.context_summary.average_income_pressure) }}%</strong>
+                <small>Canasta quincenal contra ingreso quincenal</small>
+            </article>
+            <article class="card kpi-card kpi-card-violet">
+                <span>Mayor presión familiar</span>
+                <strong>{{ dashboard_data.context_summary.highest_pressure_context }}</strong>
+                <small>{{ "%.2f"|format(dashboard_data.context_summary.highest_pressure) }}% del ingreso quincenal</small>
+            </article>
+            <article class="card kpi-card kpi-card-gold">
+                <span>Hogares con un ingreso</span>
+                <strong>{{ dashboard_data.context_summary.one_earner_count }}</strong>
+                <small>Contextos donde solo una persona aporta ingresos</small>
+            </article>
+            <article class="card kpi-card kpi-card-mint">
+                <span>Supermercado más barato</span>
+                <strong>{{ dashboard_data.cheapest_store.store }}</strong>
+                <small>Canasta semanal base: ${{ "%.2f"|format(dashboard_data.cheapest_store.total) }}</small>
+            </article>
+        </section>
+
         <section class="charts-grid dashboard-charts">
             <article class="card chart-card">
                 <div class="section-title">
@@ -133,18 +295,22 @@
         <article class="card content-card">
             <div class="section-title">
                 <h2>Contextos analizados</h2>
-                <p>Ingreso quincenal, perceptores y presión de la canasta por hogar.</p>
+                <p>Ingreso mensual, gastos comunes, saldo y salud financiera por hogar.</p>
             </div>
             <div class="table-wrap large-table">
                 <table>
                     <thead>
                         <tr>
                             <th>Contexto</th>
-                            <th>Integrantes</th>
+                            <th>Tipo</th>
+                            <th>Adultos</th>
+                            <th>Niños</th>
                             <th>Perceptores</th>
-                            <th>Ingreso quincenal</th>
-                            <th>Canasta quincenal</th>
-                            <th>% ingreso</th>
+                            <th>Ingreso mensual</th>
+                            <th>Gasto fijo</th>
+                            <th>Gasto variable</th>
+                            <th>Saldo</th>
+                            <th>Salud</th>
                             <th>Tienda</th>
                         </tr>
                     </thead>
@@ -152,11 +318,15 @@
                         {% for context in dashboard_data.context_comparison %}
                             <tr>
                                 <td>{{ context.name }}</td>
-                                <td>{{ context.people }}</td>
+                                <td>{{ context.household_type }}</td>
+                                <td>{{ context.adults }}</td>
+                                <td>{{ context.children }}</td>
                                 <td>{{ context.earners }}</td>
-                                <td>${{ "%.2f"|format(context.biweekly_income) }}</td>
-                                <td>${{ "%.2f"|format(context.total) }}</td>
-                                <td>{{ "%.2f"|format(context.percent_income) }}%</td>
+                                <td>${{ "%.2f"|format(context.income) }}</td>
+                                <td>${{ "%.2f"|format(context.fixed_expenses) }}</td>
+                                <td>${{ "%.2f"|format(context.variable_expenses) }}</td>
+                                <td>${{ "%.2f"|format(context.remaining) }}</td>
+                                <td>{{ context.health.label }}</td>
                                 <td>{{ context.store }}</td>
                             </tr>
                         {% endfor %}
@@ -208,7 +378,7 @@
 {% block scripts %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    window.dashboardData = {{ dashboard_data | tojson }};
+    window.dashboardData = {{ dashboard_data | tojson | safe }};
 </script>
 <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
 {% endblock %}

@@ -136,5 +136,26 @@ class Context(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
 
     @property
+    def child_count(self):
+        return max(int(self.children or 0), 0)
+
+    @property
+    def adult_count(self):
+        adults = max(int(self.adults or 0), 0)
+        return max(adults, 1)
+
+    @property
+    def people_count(self):
+        return self.adult_count + self.child_count
+
+    @property
+    def household_type_label(self):
+        if self.child_count > 0:
+            return "Familia"
+        if self.adult_count > 1:
+            return "Pareja"
+        return "Vive solo"
+
+    @property
     def composition_label(self):
-        return f"{self.number_people} personas"
+        return f"{self.adult_count} adultos · {self.child_count} niños"

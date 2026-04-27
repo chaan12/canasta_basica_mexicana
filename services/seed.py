@@ -38,6 +38,7 @@ def ensure_database_schema():
 def seed_database():
     sync_basic_basket_catalog()
     seed_default_contexts()
+    normalize_contexts()
 
 
 def sync_basic_basket_catalog():
@@ -87,29 +88,10 @@ def seed_default_contexts():
 
     contexts = [
         Context(
-            name="Familia urbana",
-            number_people=4,
-            children=1,
-            adults=2,
-            elderly=1,
-            gender="Mixto",
-            dependents_count=2,
-            monthly_income=18000,
-            earners=2,
-            income_type="fijo",
-            consumption_level="medio",
-            preferences="economico",
-            diet="Mixta",
-            purchase_frequency="semanal",
-        ),
-        Context(
-            name="Estudiante independiente",
+            name="Vive solo",
             number_people=1,
             children=0,
             adults=1,
-            elderly=0,
-            gender="No especificado",
-            dependents_count=0,
             monthly_income=7500,
             earners=1,
             income_type="variable",
@@ -119,13 +101,23 @@ def seed_default_contexts():
             purchase_frequency="quincenal",
         ),
         Context(
-            name="Hogar premium",
-            number_people=3,
-            children=1,
+            name="Pareja",
+            number_people=2,
+            children=0,
             adults=2,
-            elderly=0,
-            gender="Mixto",
-            dependents_count=1,
+            monthly_income=18000,
+            earners=2,
+            income_type="fijo",
+            consumption_level="medio",
+            preferences="economico",
+            diet="Mixta",
+            purchase_frequency="semanal",
+        ),
+        Context(
+            name="Familia con niños",
+            number_people=4,
+            children=2,
+            adults=2,
             monthly_income=36000,
             earners=2,
             income_type="fijo",
@@ -138,6 +130,42 @@ def seed_default_contexts():
 
     db.session.add_all(contexts)
     db.session.commit()
+
+
+def normalize_contexts():
+    """Keep legacy rows aligned with the current adult and child model."""
+    has_changes = False
+    for context in Context.query.all():
+        adults = max(int(context.adults or 0), 0)
+        children = max(int(context.children or 0), 0)
+        legacy_older_adults = max(int(context.elderly or 0), 0)
+        if legacy_older_adults:
+            adults += legacy_older_adults
+            context.elderly = 0
+            has_changes = True
+        if adults < 1:
+            adults = max(int(context.number_people or 1) - children, 1)
+            has_changes = True
+        if context.adults != adults:
+            context.adults = adults
+            has_changes = True
+        if context.children != children:
+            context.children = children
+            has_changes = True
+        people = adults + children
+        if context.number_people != people:
+            context.number_people = people
+            has_changes = True
+        if context.dependents_count != children:
+            context.dependents_count = children
+            has_changes = True
+        earners = min(max(int(context.earners or 1), 1), adults)
+        if context.earners != earners:
+            context.earners = earners
+            has_changes = True
+
+    if has_changes:
+        db.session.commit()
 
 
 def normalize_catalogs():
