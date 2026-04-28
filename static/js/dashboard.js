@@ -21,7 +21,18 @@ const chartColors = [
     palette.coral,
 ];
 
-const dashboardData = window.dashboardData || {};
+function readDashboardData() {
+    const element = document.getElementById("dashboard-data");
+    if (!element) return window.dashboardData || {};
+
+    try {
+        return JSON.parse(element.textContent || "{}");
+    } catch (error) {
+        return {};
+    }
+}
+
+const dashboardData = readDashboardData();
 const contextCharts = {};
 
 if (window.Chart) {
