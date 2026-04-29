@@ -26,11 +26,15 @@
 
 html {
     min-height: 100%;
+    max-width: 100%;
+    overflow-x: clip;
 }
 
 body {
     margin: 0;
     min-height: 100vh;
+    max-width: 100%;
+    overflow-x: hidden;
     background: linear-gradient(135deg, #f5f7fb 0%, #eef7f6 48%, #fff7e8 100%);
     color: var(--ink);
     font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -54,9 +58,16 @@ canvas {
     max-width: 100%;
 }
 
+img {
+    max-width: 100%;
+}
+
 .app-shell {
     display: grid;
     grid-template-columns: 280px minmax(0, 1fr);
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
     min-height: 100vh;
 }
 
@@ -64,6 +75,8 @@ canvas {
     position: sticky;
     top: 0;
     align-self: start;
+    min-width: 0;
+    max-width: 100%;
     height: 100vh;
     padding: 30px 22px;
     border-right: 1px solid rgba(219, 227, 239, 0.9);
@@ -96,16 +109,26 @@ canvas {
     display: block;
 }
 
+.brand > span {
+    min-width: 0;
+}
+
+.brand strong {
+    overflow-wrap: anywhere;
+}
+
 .brand small {
     color: var(--muted);
 }
 
 .nav-list {
     display: grid;
+    min-width: 0;
     gap: 10px;
 }
 
 .nav-link {
+    min-width: 0;
     padding: 12px 14px;
     border-radius: 8px;
     color: var(--muted);
@@ -123,6 +146,7 @@ canvas {
 
 .main-content {
     width: 100%;
+    min-width: 0;
     max-width: 1520px;
     margin: 0 auto;
     padding: 46px 48px 64px;
@@ -130,6 +154,8 @@ canvas {
 
 .page-header {
     display: flex;
+    min-width: 0;
+    max-width: 100%;
     align-items: flex-start;
     justify-content: space-between;
     gap: 32px;
@@ -162,6 +188,7 @@ canvas {
 
 .filters {
     display: flex;
+    min-width: 0;
     align-items: end;
     gap: 14px;
     flex-wrap: wrap;
@@ -203,6 +230,7 @@ select:focus {
 
 .button {
     display: inline-flex;
+    max-width: 100%;
     align-items: center;
     justify-content: center;
     min-height: 44px;
@@ -247,6 +275,7 @@ select:focus {
 }
 
 .card {
+    min-width: 0;
     border: 1px solid rgba(219, 227, 239, 0.92);
     border-radius: 8px;
     background: rgba(255, 255, 255, 0.88);
@@ -263,6 +292,7 @@ select:focus {
 
 .kpi-grid {
     display: grid;
+    min-width: 0;
     grid-template-columns: repeat(5, minmax(0, 1fr));
     gap: 20px;
     margin-bottom: 24px;
@@ -293,6 +323,7 @@ select:focus {
     margin: 10px 0 6px;
     font-size: 26px;
     line-height: 1.2;
+    overflow-wrap: anywhere;
 }
 
 .kpi-card-pink {
@@ -327,6 +358,7 @@ select:focus {
 
 .charts-grid {
     display: grid;
+    min-width: 0;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 24px;
     margin-bottom: 26px;
@@ -360,6 +392,7 @@ select:focus {
 }
 
 .section-title {
+    min-width: 0;
     margin-bottom: 20px;
 }
 
@@ -379,15 +412,19 @@ select:focus {
 .data-grid,
 .two-column {
     display: grid;
+    min-width: 0;
     grid-template-columns: minmax(360px, 0.9fr) minmax(0, 1.1fr);
     gap: 24px;
 }
 
 .table-wrap {
+    width: 100%;
+    min-width: 0;
     overflow-x: auto;
     border: 1px solid var(--line);
     border-radius: 8px;
     background: rgba(255, 255, 255, 0.86);
+    -webkit-overflow-scrolling: touch;
 }
 
 table {
@@ -400,6 +437,7 @@ td {
     padding: 14px 16px;
     border-bottom: 1px solid var(--line);
     text-align: left;
+    overflow-wrap: anywhere;
 }
 
 th {
@@ -513,6 +551,10 @@ tbody tr:last-child td {
     gap: 20px;
     border-bottom: 1px solid var(--line);
     padding: 0 0 18px;
+}
+
+.list-item > div {
+    min-width: 0;
 }
 
 .list-item:last-child {
@@ -797,8 +839,13 @@ tbody tr:last-child td {
     display: none;
 }
 
+.dashboard-panel {
+    min-width: 0;
+}
+
 .context-finance-layout {
     display: grid;
+    min-width: 0;
     grid-template-columns: minmax(0, 1.45fr) minmax(300px, 0.55fr);
     gap: 24px;
     margin-bottom: 24px;
@@ -806,6 +853,7 @@ tbody tr:last-child td {
 
 .context-selector-bar {
     display: grid;
+    min-width: 0;
     grid-template-columns: minmax(220px, 1fr) minmax(220px, 340px) minmax(260px, 1.2fr);
     align-items: end;
     gap: 18px;
@@ -907,6 +955,10 @@ tbody tr:last-child td {
     display: flex;
     align-items: center;
     gap: 12px;
+}
+
+.health-status-row > div {
+    min-width: 0;
 }
 
 .traffic-light {
@@ -1016,6 +1068,7 @@ tbody tr:last-child td {
 }
 
 .store-value-row span {
+    min-width: 0;
     overflow: hidden;
     color: var(--muted);
     text-overflow: ellipsis;
@@ -1064,6 +1117,10 @@ tbody tr:last-child td {
 .store-risk-item small,
 .store-risk-item b {
     display: block;
+}
+
+.store-risk-item > div {
+    min-width: 0;
 }
 
 .store-risk-item small {
@@ -1271,6 +1328,10 @@ tbody tr:last-child td {
     display: block;
 }
 
+.variation-item > div {
+    min-width: 0;
+}
+
 .variation-item small {
     color: var(--muted);
 }
@@ -1282,6 +1343,21 @@ tbody tr:last-child td {
 .large-table {
     max-height: 620px;
     overflow: auto;
+    overscroll-behavior: contain;
+}
+
+.analytics-grid .large-table,
+.product-table-card .large-table {
+    overflow-x: auto;
+    overflow-y: auto;
+}
+
+.analytics-grid .large-table table {
+    min-width: 1080px;
+}
+
+.product-table-card .large-table table {
+    min-width: 920px;
 }
 
 .large-table thead th {
@@ -1336,10 +1412,13 @@ tbody tr:last-child td {
 
 .heatmap-wrap {
     max-height: 720px;
+    overflow-x: hidden;
+    overflow-y: auto;
 }
 
 .heatmap-table {
     min-width: 980px;
+    table-layout: fixed;
 }
 
 .heatmap-table th:first-child {
@@ -1447,12 +1526,22 @@ tbody tr:last-child td {
     }
 
     .brand {
+        flex: 0 0 auto;
+    }
+
+    .brand {
         margin-bottom: 0;
     }
 
     .nav-list {
         display: flex;
         flex-wrap: wrap;
+        justify-content: flex-end;
+    }
+
+    .nav-link:hover,
+    .nav-link.active {
+        transform: none;
     }
 
     .main-content {
@@ -1521,15 +1610,26 @@ tbody tr:last-child td {
 
     .sidebar {
         align-items: flex-start;
+        gap: 14px;
     }
 
     .nav-list {
         width: 100%;
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 8px;
     }
 
     .nav-link {
         flex: 1;
+        min-width: 0;
+        padding: 10px 8px;
+        overflow-wrap: anywhere;
         text-align: center;
+    }
+
+    .brand {
+        width: 100%;
     }
 
     .page-header h1 {
@@ -1560,6 +1660,7 @@ tbody tr:last-child td {
     .dashboard-header {
         min-height: 420px;
         justify-content: flex-end;
+        padding: 24px;
     }
 
     .dashboard-hero-shade {
@@ -1603,6 +1704,20 @@ tbody tr:last-child td {
         padding: 22px 16px 40px;
     }
 
+    .page-header,
+    .form-card,
+    .content-card,
+    .simulation-panel,
+    .health-panel {
+        padding: 20px;
+    }
+
+    .kpi-card,
+    .executive-kpis .kpi-card {
+        min-height: 0;
+        padding: 20px;
+    }
+
     .chart-card {
         height: 400px;
         padding: 18px;
@@ -1618,6 +1733,79 @@ tbody tr:last-child td {
 
     .dashboard-charts .tall-chart .chart-frame {
         height: 430px;
+    }
+
+    .heatmap-wrap {
+        max-height: min(70vh, 620px);
+        overflow-x: hidden;
+        overflow-y: auto;
+        border: 1px solid var(--line);
+        background: rgba(255, 255, 255, 0.58);
+    }
+
+    .heatmap-table {
+        min-width: 0;
+        border-collapse: separate;
+        border-spacing: 0 12px;
+        table-layout: auto;
+    }
+
+    .heatmap-table thead {
+        display: none;
+    }
+
+    .heatmap-table tbody,
+    .heatmap-table tr,
+    .heatmap-table th,
+    .heatmap-table td {
+        display: block;
+    }
+
+    .heatmap-table tr {
+        overflow: hidden;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.9);
+        box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+    }
+
+    .heatmap-table th:first-child,
+    .heatmap-table tbody th {
+        position: static;
+        min-width: 0;
+    }
+
+    .heatmap-table tbody th {
+        border-bottom: 1px solid var(--line);
+        padding: 14px;
+    }
+
+    .heatmap-price {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: center;
+        min-width: 0;
+        border-left: 0;
+        border-bottom: 1px solid rgba(219, 227, 239, 0.75);
+        padding: 12px 14px;
+    }
+
+    .heatmap-price:last-child {
+        border-bottom: 0;
+    }
+
+    .heatmap-price::before {
+        content: attr(data-store);
+        min-width: 0;
+        color: var(--ink);
+        font-size: 13px;
+        font-weight: 800;
+        overflow-wrap: anywhere;
+    }
+
+    .heatmap-price strong,
+    .heatmap-price small {
+        text-align: right;
     }
 
     .danger-alert {
@@ -1639,5 +1827,202 @@ tbody tr:last-child td {
 
     .variation-item b {
         grid-column: 2;
+    }
+}
+
+@media (max-width: 560px) {
+    body {
+        font-size: 14px;
+    }
+
+    .sidebar {
+        padding: 14px;
+    }
+
+    .brand-mark {
+        width: 40px;
+        height: 40px;
+    }
+
+    .brand small {
+        display: none;
+    }
+
+    .nav-list {
+        overflow-x: visible;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        padding-bottom: 2px;
+    }
+
+    .nav-link {
+        white-space: normal;
+    }
+
+    .main-content {
+        padding: 18px 12px 34px;
+    }
+
+    .page-header,
+    .dashboard-header,
+    .form-card,
+    .content-card,
+    .simulation-panel,
+    .health-panel,
+    .context-selector-bar {
+        padding: 16px;
+    }
+
+    .page-header {
+        gap: 18px;
+        margin-bottom: 22px;
+    }
+
+    .page-header h1 {
+        font-size: 24px;
+        overflow-wrap: anywhere;
+    }
+
+    .dashboard-header {
+        min-height: 390px;
+    }
+
+    .dashboard-hero-copy h1 {
+        font-size: 34px;
+    }
+
+    .hero-stat {
+        min-width: 0;
+        padding: 12px;
+    }
+
+    .dashboard-tab {
+        min-height: 64px;
+        padding: 12px;
+    }
+
+    .dashboard-tab::after {
+        right: 12px;
+        bottom: 8px;
+        width: 36px;
+    }
+
+    .context-meta-list,
+    .tag-row,
+    .row-actions,
+    .form-actions {
+        gap: 8px;
+    }
+
+    .context-meta-list span,
+    .tag {
+        max-width: 100%;
+        overflow-wrap: anywhere;
+    }
+
+    .store-value-row,
+    .basket-detail-list div,
+    .variation-item,
+    .store-risk-item {
+        align-items: flex-start;
+    }
+
+    .basket-detail-list div {
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .list-item {
+        gap: 14px;
+    }
+
+    .row-actions,
+    .row-actions form,
+    .row-actions .button,
+    .form-actions .button {
+        width: 100%;
+    }
+
+    th,
+    td {
+        padding: 11px 12px;
+    }
+
+    .heatmap-table {
+        border-spacing: 0 10px;
+    }
+
+    .heatmap-table tbody th,
+    .heatmap-price {
+        padding: 12px;
+    }
+
+    .heatmap-price {
+        grid-template-columns: 1fr;
+        gap: 4px;
+    }
+
+    .heatmap-price strong,
+    .heatmap-price small {
+        text-align: left;
+    }
+
+    .chart-card {
+        height: 360px;
+        padding: 16px;
+    }
+
+    .chart-frame {
+        height: 235px;
+    }
+
+    .dashboard-charts .tall-chart {
+        height: 500px;
+    }
+
+    .dashboard-charts .tall-chart .chart-frame {
+        height: 370px;
+    }
+}
+
+@media (max-width: 380px) {
+    .main-content {
+        padding-inline: 10px;
+    }
+
+    .page-header h1 {
+        font-size: 22px;
+    }
+
+    .dashboard-hero-copy h1 {
+        font-size: 30px;
+    }
+
+    .dashboard-hero-copy p:not(.eyebrow) {
+        font-size: 14px;
+    }
+
+    .button {
+        padding-inline: 10px;
+        white-space: normal;
+    }
+
+    .dashboard-tab {
+        grid-template-columns: 34px minmax(0, 1fr);
+        column-gap: 10px;
+    }
+
+    .dashboard-tab span {
+        width: 34px;
+        height: 34px;
+    }
+
+    .store-risk-item,
+    .variation-item {
+        grid-template-columns: 1fr;
+    }
+
+    .store-risk-item b,
+    .variation-item b {
+        grid-column: auto;
     }
 }

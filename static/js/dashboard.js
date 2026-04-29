@@ -843,7 +843,7 @@ function renderPriceHeatmap() {
             const className = heatmapClass(product, price);
             const difference = price ? price - Number(product.cheapest_price || cheapestPrice(product)) : 0;
             return `
-                <td class="heatmap-price ${className}">
+                <td class="heatmap-price ${className}" data-store="${escapeHtml(store)}">
                     <strong>${price ? formatMoney(price) : "-"}</strong>
                     <small>${price && difference > 0 ? `+${formatMoney(difference)}` : price ? "mejor" : "sin dato"}</small>
                 </td>
