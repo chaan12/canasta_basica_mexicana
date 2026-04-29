@@ -34,6 +34,7 @@ function readDashboardData() {
 
 const dashboardData = readDashboardData();
 const contextCharts = {};
+const allCharts = [];
 
 if (window.Chart) {
     Chart.defaults.font.family = "Inter, system-ui, sans-serif";
@@ -104,6 +105,27 @@ function setText(id, value) {
     if (element) element.textContent = value;
 }
 
+function escapeHtml(value) {
+    return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll("\"", "&quot;")
+        .replaceAll("'", "&#039;");
+}
+
+function alphabeticalCompare(left, right) {
+    return String(left ?? "").localeCompare(String(right ?? ""), "es-MX", {
+        sensitivity: "base",
+        numeric: true,
+    });
+}
+
+function formatSignedMoney(value) {
+    const amount = Number(value || 0);
+    return `${amount > 0 ? "+" : ""}${formatMoney(amount)}`;
+}
+
 function priceValues(product) {
     return stores()
         .map((store) => Number(product.prices?.[store] || 0))
@@ -128,7 +150,9 @@ function productPrice(product, store) {
 function createChart(id, config) {
     const element = byId(id);
     if (!window.Chart || !element) return null;
-    return new Chart(element, config);
+    const chart = new Chart(element, config);
+    allCharts.push(chart);
+    return chart;
 }
 
 function parsedValue(context) {
@@ -233,19 +257,103 @@ function updateChart(chart, labels, datasets) {
     chart.update();
 }
 
+function storeFinanceRows(context) {
+    const monthlyIncome = Number(context.income || 0);
+    const basketMonthly = Number(context.basket_monthly || 0);
+    const fixedBase = Number(context.fixed_expenses || 0) - basketMonthly;
+    const variable = Number(context.variable_expenses || 0);
+    const storeCosts = context.store_monthly_costs?.length
+        ? context.store_monthly_costs
+        : [{ store: context.store || "Sin datos", total: basketMonthly }];
+
+    return storeCosts.map((item) => {
+        const fixed = fixedBase + Number(item.total || 0);
+        const remaining = monthlyIncome - fixed - variable;
+        return {
+            store: item.store,
+            basket: Number(item.total || 0),
+            fixed,
+            variable,
+            remaining,
+        };
+    });
+}
+
+function renderStoreValueList(id, rows, key) {
+    const container = byId(id);
+    if (!container) return;
+
+    container.innerHTML = rows.map((row) => `
+        <div class="store-value-row${key === "remaining" && row[key] < 0 ? " negative" : ""}">
+            <span>${escapeHtml(row.store)}</span>
+            <b>${formatMoney(row[key])}</b>
+        </div>
+    `).join("");
+}
+
+function storeRiskState(row, monthlyIncome) {
+    const ratio = monthlyIncome ? Number(row.remaining || 0) / monthlyIncome : 0;
+    if (Number(row.remaining || 0) < 0 || ratio < 0.05) {
+        return {
+            state: "red",
+            label: "Riesgo alto",
+            detail: "Saldo crítico",
+        };
+    }
+    if (ratio < 0.15) {
+        return {
+            state: "yellow",
+            label: "Alerta",
+            detail: "Margen limitado",
+        };
+    }
+    return {
+        state: "green",
+        label: "Estable",
+        detail: "Margen sano",
+    };
+}
+
+function renderStoreRiskList(context) {
+    const container = byId("storeRiskList");
+    if (!container || !context) return;
+
+    const monthlyIncome = Number(context.income || 0);
+    const rows = storeFinanceRows(context);
+
+    container.innerHTML = rows.map((row) => {
+        const risk = storeRiskState(row, monthlyIncome);
+        return `
+            <article class="store-risk-item risk-${risk.state}">
+                <span class="risk-light" aria-hidden="true"></span>
+                <div>
+                    <strong>${escapeHtml(row.store)}</strong>
+                    <small>${risk.label} · ${risk.detail}</small>
+                </div>
+                <b>${formatMoney(row.remaining)}</b>
+            </article>
+        `;
+    }).join("");
+}
+
 function updateKpis(context) {
     const health = context.health || {};
+    const rows = storeFinanceRows(context);
+    const fixedValues = rows.map((row) => row.fixed);
+    const remainingValues = rows.map((row) => row.remaining);
+
     setText("incomeKpiValue", formatMoney(context.income));
-    setText("fixedKpiValue", formatMoney(context.fixed_expenses));
+    setText("fixedKpiValue", `Desde ${formatMoney(Math.min(...fixedValues, Number(context.fixed_expenses || 0)))}`);
     setText("variableKpiValue", formatMoney(context.variable_expenses));
-    setText("remainingKpiValue", formatMoney(context.remaining));
+    setText("remainingKpiValue", `Mejor ${formatMoney(Math.max(...remainingValues, Number(context.remaining || 0)))}`);
     setText("incomeKpiNote", context.name || "Contexto seleccionado");
-    setText("fixedKpiNote", `Incluye canasta: ${formatMoney(context.basket_monthly)}`);
-    setText("remainingKpiNote", health.state === "red" ? "Requiere ajuste inmediato" : "Disponible después de gastos");
+    renderStoreValueList("fixedStoreValues", rows, "fixed");
+    renderStoreValueList("variableStoreValues", rows, "variable");
+    renderStoreValueList("remainingStoreValues", rows, "remaining");
 
     const remainingKpi = byId("remainingKpi");
     if (remainingKpi) {
-        remainingKpi.classList.toggle("kpi-danger", Number(context.remaining || 0) < 0);
+        remainingKpi.classList.toggle("kpi-danger", remainingValues.some((value) => value < 0));
         remainingKpi.classList.toggle("kpi-warning", health.state === "yellow");
     }
 }
@@ -278,7 +386,7 @@ function updateHealth(context) {
 function updateContextMeta(context) {
     setText("contextHouseholdValue", context.household_type || "Contexto");
     setText("contextPeopleValue", `${context.people || 0} integrantes: ${context.adults || 0} adultos, ${context.children || 0} niños`);
-    setText("contextStoreValue", `Mercado: ${context.store || "Sin datos"}`);
+    setText("contextStoreValue", `Mejor tienda: ${context.store || "Sin datos"}`);
 }
 
 function updateContextCharts(context) {
@@ -330,17 +438,6 @@ function updateContextCharts(context) {
         }]
     );
 
-    updateChart(
-        contextCharts.householdBreakdown,
-        ["Adultos", "Niños"],
-        [{
-            label: "Costo mensual de canasta",
-            data: [context.adult_basket_monthly, context.children_basket_monthly],
-            backgroundColor: ["rgba(37, 99, 235, 0.76)", "rgba(219, 39, 119, 0.72)"],
-            borderRadius: 8,
-        }]
-    );
-
     const storeCosts = context.store_monthly_costs || [];
     const selectedStore = context.store;
     updateChart(
@@ -361,6 +458,7 @@ function updateContextDashboard(context) {
     if (!context) return;
     updateContextMeta(context);
     updateKpis(context);
+    renderStoreRiskList(context);
     updateHealth(context);
     updateContextCharts(context);
 }
@@ -381,11 +479,6 @@ function initContextFinanceCharts() {
         data: { labels: [], datasets: [] },
         options: doughnutOptions(),
     });
-    contextCharts.householdBreakdown = createChart("householdBreakdownChart", {
-        type: "bar",
-        data: { labels: [], datasets: [] },
-        options: baseBarOptions({ showLegend: false }),
-    });
     contextCharts.storeBasket = createChart("storeBasketChart", {
         type: "bar",
         data: { labels: [], datasets: [] },
@@ -405,32 +498,6 @@ function bindContextSelector() {
         });
     }
     updateContextDashboard(initialContext);
-}
-
-function bindStoreSelector() {
-    const storeSelect = byId("storeSelect");
-    if (!storeSelect) return;
-
-    storeSelect.addEventListener("change", (event) => {
-        const selectedStore = String(event.target.value || "");
-        try {
-            const url = new URL(window.location.href);
-            if (selectedStore) {
-                url.searchParams.set("store", selectedStore);
-            } else {
-                url.searchParams.delete("store");
-            }
-
-            const contextSelect = byId("contextSelect");
-            if (contextSelect?.value) {
-                url.searchParams.set("context", contextSelect.value);
-            }
-
-            window.location.assign(url.toString());
-        } catch (error) {
-            window.location.reload();
-        }
-    });
 }
 
 function initMonthlyBudgetByContextChart() {
@@ -647,6 +714,30 @@ function initAllProductsComparisonChart() {
     });
 }
 
+function initPriceGapChart() {
+    const sortedProducts = [...products()]
+        .sort((left, right) => Number(right.price_variance || 0) - Number(left.price_variance || 0));
+
+    createChart("priceGapChart", {
+        type: "bar",
+        data: {
+            labels: sortedProducts.map((product) => product.name),
+            datasets: [{
+                label: "Ahorro potencial",
+                data: sortedProducts.map((product) => Number(product.price_variance || 0)),
+                backgroundColor: sortedProducts.map((product) => {
+                    const variance = Number(product.price_variance || 0);
+                    if (variance >= 20) return "rgba(229, 72, 77, 0.78)";
+                    if (variance >= 10) return "rgba(245, 158, 11, 0.76)";
+                    return "rgba(15, 118, 110, 0.72)";
+                }),
+                borderRadius: 8,
+            }],
+        },
+        options: baseBarOptions({ horizontal: true, showLegend: false }),
+    });
+}
+
 function updateVariationList() {
     const container = byId("variationList");
     if (!container) return;
@@ -667,16 +758,157 @@ function updateVariationList() {
     `).join("");
 }
 
+function productStorePrice(product, store) {
+    return Number(product.prices?.[store] || 0);
+}
+
+function renderProductStoreTable() {
+    const tableBody = byId("productStoreTableBody");
+    const filter = byId("productStoreFilter");
+    if (!tableBody) return;
+
+    const selectedStore = String(filter?.value || "");
+    const rows = products()
+        .map((product) => {
+            const selectedPrice = selectedStore ? productStorePrice(product, selectedStore) : Number(product.cheapest_price || 0);
+            const cheapest = Number(product.cheapest_price || cheapestPrice(product));
+            return {
+                product,
+                selectedPrice,
+                cheapest,
+                difference: selectedStore ? selectedPrice - cheapest : 0,
+            };
+        })
+        .filter((row) => !selectedStore || row.selectedPrice > 0)
+        .sort((left, right) => alphabeticalCompare(left.product.name, right.product.name));
+
+    tableBody.innerHTML = rows.map(({ product, selectedPrice, cheapest, difference }) => `
+        <tr>
+            <td>${escapeHtml(product.name)}</td>
+            <td>${escapeHtml(product.presentation)}</td>
+            <td>${selectedStore ? `${escapeHtml(selectedStore)}: ${formatMoney(selectedPrice)}` : formatMoney(cheapest)}</td>
+            <td>${escapeHtml(product.cheapest_store || "Sin datos")}: ${formatMoney(cheapest)}</td>
+            <td class="${difference > 0 ? "price-difference" : ""}">${selectedStore ? formatSignedMoney(difference) : "-"}</td>
+            <td>${formatMoney(product.average_market_price)}</td>
+            <td>${formatMoney(product.price_variance)}</td>
+        </tr>
+    `).join("");
+}
+
+function sortSelectOptionsAlphabetically(selectId) {
+    const select = byId(selectId);
+    if (!select) return;
+
+    const defaultOption = select.querySelector('option[value=""]');
+    const sortedOptions = [...select.querySelectorAll('option:not([value=""])')]
+        .sort((left, right) => alphabeticalCompare(left.textContent, right.textContent));
+
+    select.innerHTML = "";
+    if (defaultOption) {
+        select.appendChild(defaultOption);
+    }
+    sortedOptions.forEach((option) => select.appendChild(option));
+}
+
+function bindProductStoreFilter() {
+    const filter = byId("productStoreFilter");
+    if (!filter) return;
+
+    sortSelectOptionsAlphabetically("productStoreFilter");
+    filter.addEventListener("change", renderProductStoreTable);
+    renderProductStoreTable();
+}
+
+function heatmapClass(product, price) {
+    if (!price) return "missing";
+    const low = cheapestPrice(product);
+    const high = highestPrice(product);
+    if (price === low) return "best";
+    if (high <= low) return "low";
+
+    const ratio = (price - low) / (high - low);
+    if (ratio <= 0.34) return "low";
+    if (ratio <= 0.67) return "mid";
+    return "high";
+}
+
+function renderPriceHeatmap() {
+    const table = byId("priceHeatmapTable");
+    if (!table) return;
+
+    const headerCells = stores().map((store) => `<th>${escapeHtml(store)}</th>`).join("");
+    const bodyRows = products().map((product) => {
+        const priceCells = stores().map((store) => {
+            const price = productStorePrice(product, store);
+            const className = heatmapClass(product, price);
+            const difference = price ? price - Number(product.cheapest_price || cheapestPrice(product)) : 0;
+            return `
+                <td class="heatmap-price ${className}">
+                    <strong>${price ? formatMoney(price) : "-"}</strong>
+                    <small>${price && difference > 0 ? `+${formatMoney(difference)}` : price ? "mejor" : "sin dato"}</small>
+                </td>
+            `;
+        }).join("");
+
+        return `
+            <tr>
+                <th scope="row">
+                    <strong>${escapeHtml(product.name)}</strong>
+                    <small>${escapeHtml(product.presentation)}</small>
+                </th>
+                ${priceCells}
+            </tr>
+        `;
+    }).join("");
+
+    table.innerHTML = `
+        <thead>
+            <tr>
+                <th>Producto</th>
+                ${headerCells}
+            </tr>
+        </thead>
+        <tbody>${bodyRows}</tbody>
+    `;
+}
+
+function activateDashboardTab(targetId) {
+    document.querySelectorAll(".dashboard-tab").forEach((tab) => {
+        const isActive = tab.dataset.tabTarget === targetId;
+        tab.classList.toggle("active", isActive);
+        tab.setAttribute("aria-selected", String(isActive));
+    });
+
+    document.querySelectorAll(".dashboard-panel").forEach((panel) => {
+        const isActive = panel.id === targetId;
+        panel.classList.toggle("active", isActive);
+        panel.hidden = !isActive;
+    });
+
+    window.setTimeout(() => {
+        allCharts.forEach((chart) => chart.resize());
+    }, 0);
+}
+
+function bindDashboardTabs() {
+    document.querySelectorAll(".dashboard-tab").forEach((tab) => {
+        tab.addEventListener("click", () => activateDashboardTab(tab.dataset.tabTarget));
+    });
+}
+
 document.addEventListener("DOMContentLoaded", () => {
+    bindDashboardTabs();
     initContextFinanceCharts();
-    bindStoreSelector();
     bindContextSelector();
     initMonthlyBudgetByContextChart();
     initIncomeBasketChart();
     initPressureChart();
     initPerPersonChart();
     initEarnersScatterChart();
+    initPriceGapChart();
     initPriceRangeChart();
     initAllProductsComparisonChart();
     updateVariationList();
+    bindProductStoreFilter();
+    renderPriceHeatmap();
 });
